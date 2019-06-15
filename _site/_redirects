@@ -1,2 +1,7 @@
 # Redirect default Netlify subdomain to primary domain
 https://slides-mitchell.netlify.com/* https://slides.mitchelloharawild.com/:splat 301!
+/isf2019/* https://fable-isf2019.netlify.com/:splat 200
+/wombat-gganimate/* https://numbats-gganimate.netlify.com/:splat 200
+/fable-tfeam/* https://fable-tfeam2018.netlify.com/:splat 200
+/user2018/* https://fasster-user2018.netlify.com/:splat 200
+
