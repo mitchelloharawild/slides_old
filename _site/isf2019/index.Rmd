@@ -1,0 +1,965 @@
+---
+title: "fable::ISF2019"
+subtitle: "Flexible futures for fable functionality"
+author: "Mitchell O'Hara-Wild"
+date: '12/05/2019'
+output:
+  xaringan::moon_reader:
+    chakra: ./libs/remark-latest.min.js
+    css: ["././libs/slides.css", "././libs/animate.css"]
+    lib_dir: ./libs
+    seal: false
+    nature:
+      highlightStyle: github
+      ratio: '16:9'
+      highlightLines: true
+      countIncrementalSlides: false 
+      beforeInit: ["./libs/jquery/jquery.min.js", "./libs/slides.js"]
+---
+class: inverse
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE, width = 120)
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(fontawesome)
+library(lubridate)
+library(htmltools)
+
+library(tsibble)
+library(fasster)
+library(fable)
+
+opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, comment = "#>",
+  fig.path = 'figure/', cache.path = 'cache/', fig.align = 'center',
+  fig.width = 12, fig.height = 4, fig.show = 'hold',
+  cache = TRUE, external = TRUE, dev = 'svglite', dev.args = list(bg = "transparent")
+)
+
+mp4_vid <- function(src){
+  HTML(
+    paste0(
+      '<video autoplay>
+        <source src="', src, '" type="video/mp4">
+      </video>'
+    )
+  )
+}
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+   lines <- options$output.lines
+   if (is.null(lines)) {
+     return(hook_output(x, options))  # pass to default hook
+   }
+   x <- unlist(strsplit(x, "\n"))
+   more <- "..."
+   if (length(lines)==1) {        # first n lines
+     if (length(x) > lines) {
+       # truncate the output, but add ....
+       x <- c(head(x, lines), more)
+     }
+   } else {
+     x <- c(more, x[lines], more)
+   }
+   # paste these lines together
+   x <- paste(c(x, ""), collapse = "\n")
+   hook_output(x, options)
+ })
+
+theme_set(
+  theme_grey(base_size = 16) +
+  theme(
+    legend.position = "bottom",
+    plot.background = element_rect(fill = "transparent"),
+    legend.background = element_rect(fill = "transparent")
+  )
+)
+```
+
+
+```{css, echo=FALSE}
+/* custom.css */
+.left-code {
+  color: #777;
+  width: 40%;
+  height: 92%;
+  float: left;
+}
+.right-plot {
+  width: 58%;
+  float: right;
+  padding-left: 1%;
+}
+```
+
+
+.title[fable]
+.sticker-float[![fable](resources/fable.svg)]
+
+## Flexible futures for fable functionality
+
+.bottom[
+### Mitchell O'Hara-Wild (`r fa("twitter", fill="#1da1f2")`[@mitchoharawild](https://twitter.com/mitchoharawild))
+### Rob Hyndman (`r fa("twitter", fill="#1da1f2")`[@robjhyndman](https://twitter.com/robjhyndman/))
+### 19 June 2019
+### Slides @ [slides.mitchelloharawild.com/isf2019](https://slides.mitchelloharawild.com/isf2019)
+]
+
+---
+class: center
+
+.animated.fadeIn[
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+]
+
+
+---
+class: center
+
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+.animated.fadeIn[
+.sticker[![tsibbledata](resources/tsibbledata.svg)]
+.sticker[![feasts](resources/feasts.svg)]
+.sticker[![tsibble](resources/tsibble.svg)]
+
+## [tidyverts.org](http://www.tidyverts.org)
+]
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+# Tidy temporal data structure
+
+### Domestic tourism in Australia
+
+```{r tourism-data, echo = TRUE}
+library(tsibble)
+tourism
+```
+
+---
+
+class: top
+
+.sticker-float[![feasts](resources/feasts.svg)]
+
+# A peak at the features
+
+### Compute features relating to STL decompositions
+
+```{r tourism-features, echo = TRUE}
+library(feasts)
+tourism_features <- tourism %>% 
+  features(Trips, feature_set(tags = "stl"))
+```
+
+```{r tourism-features-print, echo = FALSE}
+tourism_features
+```
+
+---
+
+class: top
+
+.sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# A peak at the features
+
+.full-width[
+```{r tourism-features-plot, echo = TRUE}
+library(ggplot2)
+tourism_features %>% 
+  ggplot(aes(x = trend_strength, y = seasonal_strength_year, colour = Purpose)) + 
+  geom_point() + stat_density_2d(aes(fill = Purpose, alpha = ..level..), bins = 5, geom = "polygon") + 
+  facet_wrap(vars(Purpose), nrow = 1) + coord_equal() + xlim(c(0,1)) + ylim(c(0,1))
+```
+]
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)].sticker-float[![dplyr](resources/dplyr.svg)]
+
+# Total holidays across Australia
+
+### Starting from the top
+
+```{r tourism-total, echo = TRUE, fig.show='hide'}
+library(dplyr)
+holiday_aus <- tourism %>% 
+  filter(Purpose == "Holiday") %>% 
+  summarise(Trips = sum(Trips))
+
+holiday_aus %>% 
+  autoplot(Trips)
+```
+
+.flex-row[
+```{r tourism-total-print, echo = FALSE}
+holiday_aus
+```
+.full-width[
+```{r tourism-total-plot, echo = FALSE}
+holiday_aus %>% 
+  autoplot(Trips)
+```
+]
+]
+
+---
+
+class: top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+# Forecasting with fable
+
+### Look at the data
+
+<br>
+
+.left-code[
+```{r tourism-total-ets-data, eval=FALSE, echo=TRUE}
+holiday_aus #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-data-output, ref.label="tourism-total-ets-data", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+# Forecasting with fable
+
+### Specify and estimate a model
+
+<br>
+
+.left-code[
+```{r tourism-total-ets-model, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  model(ETS(Trips)) #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-model-output, ref.label="tourism-total-ets-model", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+# Forecasting with fable
+
+### Make some forecasts
+
+<br>
+
+.left-code[
+```{r tourism-total-ets-forecast, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  model(ETS(Trips)) %>% 
+  forecast(h = "3 years") #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-forecast-output, ref.label="tourism-total-ets-forecast", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+# Forecasting with fable
+
+### See the results!
+
+<br>
+
+.left-code[
+```{r tourism-total-ets-plot, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  model(ETS(Trips)) %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(holiday_aus) #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-plot-output, ref.label="tourism-total-ets-plot", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+
+---
+
+class: top, inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br>
+
+## It's easy to make forecasts...
+
+<br>
+
+--
+
+# But are they good forecasts?
+
+---
+class: top
+
+# Forecast accuracy evaluation
+
+```{r, fig.height = 3}
+fit <- holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(ETS(Trips))
+fit %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(holiday_aus) + 
+  autolayer(augment(fit), .fitted, colour = "blue", linetype = "dashed") + 
+  geom_vline(aes(xintercept = yearquarter("2014 Q4"))) + 
+  geom_label(aes(x=x, y=y, label=label), 
+                 data = tibble(
+                   x = yearquarter(c("2006 Q2", "2016 Q3")), 
+                   y = c(13000, 13000), 
+                   label = c("Training", "Test")
+                 )
+  ) + 
+  theme(legend.position = "right")
+```
+
+--
+
+### MASE: Mean absolute scaled error
+
+$$\text{MASE} = \dfrac{1}{h}\sum_{t = T+1}^{T+h}\left|\frac{\displaystyle e_{t}}{\text{scale}}\right|, \hspace{2em}\text{scale} = \displaystyle\frac{1}{T-m}\sum_{t=m+1}^T |y_{t}-y_{t-m}|$$
+
+???
+
+The scale is the mean absolute error (MAE) of the seasonal naive model. Essentially, MASE is an accuracy measure relative to the seasonal naive model.
+
+---
+class: top
+
+# Comparing multiple models
+
+### Estimate multiple models
+
+.left-code[
+```{r tourism-total-many-mdls, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")), #<<
+    ets_a = ETS(Trips ~ trend("A")), #<<
+    arima = ARIMA(Trips) #<<
+  )
+```
+]
+.right-plot[
+```{r tourism-total-many-mdls-output, ref.label="tourism-total-many-mdls", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Comparing multiple models
+
+### Forecasts from multiple models
+
+.left-code[
+```{r tourism-total-many-plot, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  forecast(h = "3 years") %>% #<<
+  autoplot(holiday_aus, level = NULL) #<<
+```
+]
+.right-plot[
+```{r tourism-total-many-plot-output, ref.label="tourism-total-many-plot", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Comparing multiple models
+
+### Forecast accuracy
+
+.left-code[
+```{r tourism-total-many-fc-acc, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  forecast(h = "3 years") %>%
+  accuracy(holiday_aus) %>%  #<<
+  arrange(MASE) #<<
+```
+]
+.right-plot[
+```{r tourism-total-many-fc-acc-output, ref.label="tourism-total-many-fc-acc", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br>
+
+# Improving forecast accuracy
+
+--
+
+<br>
+<br>
+
+## Idea 1: Model ensembling
+
+### Is the combination better than its parts?
+
+---
+
+class: top
+
+# Model ensembling
+
+### A simple average of forecasts
+
+.left-code[
+```{r tourism-total-combn-1, eval=FALSE, echo=TRUE}
+holiday_aus %>%
+  filter(Quarter < yearquarter("2015 Q1")) %>%  
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3 #<<
+  )
+```
+]
+.right-plot[
+```{r tourism-total-combn-1-output, ref.label="tourism-total-combn-1", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Model ensembling
+
+### A simple average of forecasts
+
+.left-code[
+```{r tourism-total-combn-fc, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3
+  ) %>% 
+  select(combn) %>% #<<
+  forecast(h = "3 years") #<<
+```
+]
+.right-plot[
+```{r tourism-total-combn-fc-output, ref.label="tourism-total-combn-fc", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Model ensembling
+
+### Is it better? Check the forecasts.
+
+--
+
+.left-code[
+```{r tourism-total-combn-plot, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(holiday_aus, level = NULL) #<<
+```
+]
+.right-plot[
+```{r tourism-total-combn-plot-output, ref.label="tourism-total-combn-plot", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+
+---
+
+class: top
+
+# Model ensembling
+
+### Is it better? Forecast accuracy
+
+.left-code[
+```{r tourism-total-combn-fc-acc, eval=FALSE, echo=TRUE}
+holiday_aus %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  forecast(h = "3 years") %>% 
+  accuracy(holiday_aus) %>% #<<
+  arrange(MASE) #<<
+```
+]
+.right-plot[
+```{r tourism-total-combn-fc-acc-output, ref.label="tourism-total-combn-fc-acc", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+# Inconclusive for just one series
+
+--
+
+### Consider all series in the data...
+
+```{r tourism-data-2, echo = TRUE}
+tourism
+```
+
+---
+
+# But wait, there's more! Aggregations over keys.
+
+```{r}
+library(collapsibleTree)
+collapsibleTree(key_data(tourism), root = "Total Tourism", 
+                hierarchy = c("Purpose", "State", "Region"),
+                zoomable = FALSE, height = 550, fontSize = 14, width = "100%")
+```
+
+---
+
+# Consider _all_ series in the data...
+
+```{r tourism-agg, echo = TRUE}
+tourism_aggregated <- tourism %>% 
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) #<<
+```
+
+```{r tourism-agg-print, echo = FALSE}
+tourism_aggregated
+```
+
+---
+
+# Modelling may take a while...
+
+--
+
+### Fortunately, this is embarrassingly parallel!
+
+```{r tourism-agg-mdl, echo = TRUE, cache = TRUE}
+library(future) #<<
+plan(multiprocess) #<<
+tourism_fit <- tourism_aggregated %>%
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3)
+```
+```{r tourism-agg-mdl-print, echo = FALSE}
+tourism_fit
+```
+
+---
+
+## Producing forecasts are no different
+
+```{r fc-agg-fc-plot, echo = TRUE}
+tourism_fc <- tourism_fit %>% forecast(h = "3 years")
+```
+.full-width[
+```{r fc-agg-fc-plot-out, echo = FALSE, fig.height=6}
+tourism_fc %>% 
+  filter(is_aggregated(State), is_aggregated(Region)) %>% 
+  select(-State, -Region) %>% 
+  autoplot(aggregate_key(tourism, Purpose, Trips = sum(Trips)), level = NULL)
+```
+]
+
+---
+
+# Are the combinations better?
+
+### Forecast accuracy
+
+```{r tourism-agg-fc-acc-direct, echo = TRUE, cache = TRUE}
+tourism_fc %>% 
+  accuracy(tourism_aggregated) %>% #<<
+  arrange(MASE) #<<
+```
+
+---
+
+# Are the combinations better?
+
+### Forecast accuracy
+
+```{r tourism-agg-fc-acc, echo = TRUE, cache = TRUE}
+tourism_fc %>% 
+  accuracy(tourism_aggregated) %>% 
+  group_by(.model) %>% #<<
+  summarise_at(vars(ME:ACF1), median) %>% #<<
+  arrange(MASE)
+```
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br> 
+
+# Improving forecast accuracy
+
+--
+
+<br>
+<br>
+
+## Idea 2: Forecast reconciliation
+
+### Does imposing aggregation structure improve the forecasts?
+
+---
+
+# Forecast reconciliation
+
+```{r}
+library(collapsibleTree)
+collapsibleTree(key_data(tourism), root = "Total Tourism", 
+                hierarchy = c("Purpose", "State", "Region"),
+                zoomable = FALSE, height = 550, fontSize = 14, width = "100%")
+```
+
+
+---
+
+# Forecast reconciliation
+
+### MinT with covariance shrink
+
+```{r, tourism-agg-mint-fc, echo = TRUE}
+tourism_fc_reconciled <- tourism_fit %>% 
+  reconcile(coherent = min_trace(combn, method = "shrink")) %>% #<<
+  forecast(h = "3 years")
+```
+
+```{r, tourism-agg-mint-fc-out}
+tourism_fc_reconciled
+```
+
+
+.bottom[
+#### (Interface for reconciliation is still experimental.)
+]
+
+---
+
+# Forecast reconciliation
+
+### Is it better? Forecast accuracy
+
+```{r, tourism-agg-mint-median-out, echo=TRUE}
+tourism_fc_reconciled %>% 
+  accuracy(tourism_aggregated) %>% 
+  group_by(.model) %>%
+  summarise_at(vars(ME:ACF1), median) %>% 
+  arrange(MASE)
+```
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+--
+
+```{r summary, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% 
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>% 
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ens_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips)) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  reconcile(coherent = min_trace(combn)) %>% 
+  forecast(h = "3 years")
+```
+
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-1, eval = FALSE, echo = TRUE}
+library(fable) #<<
+library(tidyverse) #<<
+tsibble::tourism %>% 
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>% 
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ens_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips)) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  reconcile(coherent = min_trace(combn)) %>% 
+  forecast(h = "3 years")
+```
+
+### Integrates seamlessly with the tidyverse.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-2, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% #<<
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>% #<<
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ens_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips)) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  reconcile(coherent = min_trace(combn)) %>% 
+  forecast(h = "3 years")
+```
+
+### Tidy temporal data suitable for the future of time series.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-3, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>%
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")), #<<
+        ens_a = ETS(Trips ~ trend("A")), #<<
+        arima = ARIMA(Trips)) %>% #<<
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  reconcile(coherent = min_trace(combn)) %>% 
+  forecast(h = "3 years")
+```
+
+### Flexible, and succinct model specification.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-4, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>%
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ens_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips)) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% #<<
+  reconcile(coherent = min_trace(combn)) %>% 
+  forecast(h = "3 years")
+```
+
+### Intuitive interface for model combinations.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-5, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>%
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ens_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips)) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  reconcile(coherent = min_trace(combn)) %>% #<<
+  forecast(h = "3 years")
+```
+
+### Flexible forecast reconciliation without changing workflow.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-6, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>%
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ens_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips)) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% 
+  reconcile(coherent = min_trace(combn)) %>%
+  forecast(h = "3 years") #<<
+```
+
+### Distributional forecasts in a data format.
+
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-7, eval = FALSE, echo = TRUE}
+library(fable) #<<
+library(tidyverse) #<<
+tsibble::tourism %>% #<<
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) %>% #<<
+  model(ets_n = ETS(Trips ~ trend("N")), #<<
+        ens_a = ETS(Trips ~ trend("A")), #<<
+        arima = ARIMA(Trips)) %>% #<<
+  mutate(combn = (ets_n + ets_a + arima)/3) %>% #<<
+  reconcile(coherent = min_trace(combn)) %>% #<<
+  forecast(h = "3 years") #<<
+```
+
+### Reconciled ensemble forecasts for 425 series.
+
+---
+class: inverse, center
+
+# Work completed with help from
+
+.pull-left[
+.face-border[![Rob Hyndman](https://pbs.twimg.com/profile_images/1103150025981321216/dV3Wz_ql_400x400.png)]
+
+Rob Hyndman
+]
+.pull-right[
+.face-border[![Earo Wang](https://pbs.twimg.com/profile_images/1122341439063519233/YanRXXLu_400x400.jpg)]
+
+Earo Wang
+]
+
+--
+
+### Join our group.
+
+Monash University is now hiring in business analytics.
+
+See [bit.ly/monash-ba](bit.ly/monash-ba) for details.
+
+---
+
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Thanks! `r fa("comments", fill = "white")`]
+
+<br>
+
+.larger[
+`r fa("globe", fill = "white")` Learn more: [fable.tidyverts.org](https://fable.tidyverts.org/)
+
+`r fa("chart-line", fill = "white")` Keep updated: [tidyverts.org](http://www.tidyverts.org)
+
+`r fa("desktop", fill = "white")` Review slides: [slides.mitchelloharawild.com/isf2019](https://slides.mitchelloharawild.com/isf2019)
+
+<br>
+
+.bottom[This work is licensed as `r fa("creative-commons", fill="white")` BY-NC 4.0.]
+]
