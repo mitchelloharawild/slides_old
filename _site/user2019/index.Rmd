@@ -1,0 +1,1347 @@
+---
+title: "fable::useR2019"
+subtitle: "Flexible futures for fable functionality"
+author: "Mitchell O'Hara-Wild"
+date: '11/06/2019'
+output:
+  xaringan::moon_reader:
+    chakra: ./libs/remark-latest.min.js
+    css: ["././libs/slides.css", "././libs/animate.css"]
+    lib_dir: ./libs
+    seal: false
+    nature:
+      highlightStyle: github
+      ratio: '16:9'
+      highlightLines: true
+      countIncrementalSlides: false 
+      beforeInit: ["./libs/jquery/jquery.min.js", "./libs/slides.js"]
+      slideNumberFormat: "%current%"
+---
+class: inverse
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE, width = 120)
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(fontawesome)
+library(lubridate)
+library(htmltools)
+
+library(tsibble)
+library(fasster)
+library(fable)
+
+opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, comment = "#>",
+  fig.path = 'figure/', cache.path = 'cache/', fig.align = 'center',
+  fig.width = 12, fig.height = 4, fig.show = 'hold',
+  cache = TRUE, external = TRUE, dev = 'svglite', dev.args = list(bg = "transparent")
+)
+
+mp4_vid <- function(src){
+  HTML(
+    paste0(
+      '<video autoplay>
+        <source src="', src, '" type="video/mp4">
+      </video>'
+    )
+  )
+}
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+   lines <- options$output.lines
+   if (is.null(lines)) {
+     return(hook_output(x, options))  # pass to default hook
+   }
+   x <- unlist(strsplit(x, "\n"))
+   more <- "..."
+   if (length(lines)==1) {        # first n lines
+     if (length(x) > lines) {
+       # truncate the output, but add ....
+       x <- c(head(x, lines), more)
+     }
+   } else {
+     x <- c(more, x[lines], more)
+   }
+   # paste these lines together
+   x <- paste(c(x, ""), collapse = "\n")
+   hook_output(x, options)
+ })
+
+theme_set(
+  theme_grey(base_size = 16) +
+  theme(
+    legend.position = "bottom",
+    plot.background = element_rect(fill = "transparent"),
+    legend.background = element_rect(fill = "transparent")
+  )
+)
+```
+
+
+```{css, echo=FALSE}
+/* custom.css */
+.left-code {
+  color: #777;
+  width: 40%;
+  height: 92%;
+  float: left;
+}
+.right-plot {
+  width: 58%;
+  float: right;
+  padding-left: 1%;
+}
+```
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.larger[
+# Flexible futures
+## for **fable** functionality
+]
+
+.bottom[
+### Mitchell O'Hara-Wild (`r fa("twitter", fill="#1da1f2")`[@mitchoharawild](https://twitter.com/mitchoharawild))
+<br>
+### 11 July 2019
+### Slides @ [slides.mitchelloharawild.com/user2019](https://slides.mitchelloharawild.com/user2019)
+]
+
+---
+class: center
+
+.animated.fadeIn[
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+]
+
+
+---
+class: center
+
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+.animated.fadeIn[
+.sticker[![tsibbledata](resources/tsibbledata.svg)]
+.sticker[![feasts](resources/feasts.svg)]
+.sticker[![tsibble](resources/tsibble.svg)]
+
+## [tidyverts.org](http://www.tidyverts.org)
+]
+
+---
+class: center
+
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+.sticker[![tsibbledata](resources/tsibbledata.svg)]
+.sticker[![feasts](resources/feasts.svg)]
+.sticker[![tsibble](resources/tsibble.svg)]
+
+## [tidyverts.org](http://www.tidyverts.org)
+
+.animated.fadeIn[
+.sticker-hint[
+(see me later for some stickers!)
+]
+]
+
+---
+
+class: inverse, top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+.title[tsibble]
+
+* A modern temporal data structure
+* Provides tools for time-related analysis
+* Integrates seamlessly with the tidyverse
+
+<br>
+
+More information:
+
+* `r fa("github", fill = "white")` [tidyverts/tsibble](https://github.com/tidyverts/tsibble)
+* `r fa("globe", fill = "white")` [tsibble site](https://tsibble.tidyverts.org/)
+* `r fa("desktop", fill = "white")` [rstudio::conf 2019](https://slides.earo.me/rstudioconf19/#1) & [useR!2018](http://slides.earo.me/useR18/)
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+
+# Tidy temporal data structure
+
+### From `ts` to `tsibble`
+
+```{r co2, echo = TRUE}
+co2
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+
+# Tidy temporal data structure
+
+### From `ts` to `tsibble`
+
+```{r co2-tidy, echo = TRUE}
+as_tsibble(co2)
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+# Tidy temporal data structure
+
+### Domestic tourism in Australia
+
+```{r tourism-data, echo = TRUE}
+library(tsibble)
+tourism
+```
+
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)].sticker-float[![dplyr](resources/dplyr.svg)]
+
+# Exploring tourism in Australia
+
+### How does travel vary by purpose?
+
+```{r tourism-purpose, echo = TRUE, fig.show='hide'}
+library(dplyr)
+aus_travel <- tourism %>% 
+  group_by(Purpose) %>% 
+  summarise(Trips = sum(Trips))
+```
+
+```{r tourism-purpose-print, echo = FALSE}
+aus_travel
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### How does travel vary by purpose?
+
+```{r tourism-purpose-plot, echo = TRUE, eval = FALSE}
+library(ggplot2)
+aus_travel %>% 
+  ggplot(aes(x = Quarter, y = Trips, colour = Purpose)) + 
+  geom_line()
+```
+
+```{r tourism-purpose-plot-output, echo = FALSE, fig.height = 3.3}
+library(ggplot2)
+aus_travel %>% 
+  ggplot(aes(x = Quarter, y = Trips, colour = Purpose)) + 
+  geom_line() + 
+  xlab(NULL) + 
+  theme(legend.position = "right")
+```
+
+---
+
+class: inverse, top
+
+.sticker-float[![feasts](resources/feasts.svg)]
+
+.title[feasts]
+
+* Graphics for time series
+* Decompositions into structural components
+* Feature extraction (summaries and statistical tests)
+
+<br>
+
+More information:
+
+* `r fa("github", fill = "white")` [tidyverts/feasts](https://github.com/tidyverts/feasts)
+* `r fa("globe", fill = "white")` [feasts site](https://feasts.tidyverts.org/)
+* `r fa("comments", fill = "white")` Rob Hyndman's talk at 11:48 tomorrow! (Ariane 1+2)
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/feasts.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### Time series graphics: season plots
+
+.pull-left[
+```{r tourism-purpose-seasonplot, echo = TRUE, eval = FALSE}
+library(feasts)
+aus_travel %>% 
+  gg_season(Trips)
+```
+
+```{r tourism-purpose-seasonplot-output, echo = FALSE, eval = TRUE, fig.height=4.8, fig.width=7}
+library(feasts)
+aus_travel %>% 
+  gg_season(Trips) + 
+  theme(legend.position = "right")
+```
+]
+
+.pull-right[
+<br>
+Highlights seasonal structure by wrapping the x-axis over seasonal periods (years).
+
+- Peak holiday travel in Q1 (summer)
+- Peak business travel in Q2 & Q3
+- Peak visiting travel in Q4 & Q1
+- Other travel is largely non-seasonal
+]
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/feasts.svg)]
+
+# Exploring tourism in Australia
+
+### Time series decomposition: STL
+
+```{r tourism-purpose-stl, echo = TRUE}
+aus_travel_stl <- aus_travel %>% 
+  STL(Trips ~ season(window = "periodic"))
+```
+```{r tourism-purpose-stl-output, echo = FALSE}
+aus_travel_stl
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/feasts.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### Time series decomposition: STL
+
+```{r tourism-purpose-stl-plot, echo = TRUE, eval = FALSE}
+aus_travel_stl %>% 
+  autoplot()
+```
+
+```{r tourism-purpose-stl-plot-output, echo = FALSE, fig.height=4.5}
+aus_travel_stl %>% 
+  autoplot() + 
+  xlab(NULL) + 
+  theme(legend.position = "right")
+```
+
+---
+
+class: top
+
+.sticker-float[![feasts](resources/feasts.svg)]
+
+# Exploring tourism in Australia
+
+### Time series features: STL
+
+```{r tourism-purpose-features, echo = TRUE}
+aus_travel %>% 
+  features(Trips, feature_set(tags = "stl"))
+```
+
+* All series are trended
+* Holiday travel is most seasonal, "Other" travel is least seasonal
+* Seasonal peaks and troughs switch are Q1 and Q3 (varied by purpose)
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+# Exploring tourism in Australia
+
+### Seeing the bigger picture
+
+```{r tourism-recall, echo = TRUE}
+tourism
+```
+
+---
+
+class: top
+
+.sticker-float[![feasts](resources/feasts.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### Seeing the bigger picture
+
+```{r tourism-features-plot, echo = TRUE}
+tourism_features <- tourism %>% 
+  features(Trips, feature_set(tags = "stl"))
+```
+
+.full-width[
+```{r tourism-features-plot-output, echo = FALSE}
+tourism_features %>% 
+  ggplot(aes(x = trend_strength, y = seasonal_strength_year, colour = Purpose)) + 
+  geom_point() + 
+  stat_density_2d(aes(fill = Purpose, alpha = ..level..), bins = 5, geom = "polygon") + 
+  facet_wrap(vars(Purpose), nrow = 1) +
+  coord_equal() + 
+  xlim(c(0,1)) + ylim(c(0,1)) + 
+  labs(x = "Trend strength", y = "Seasonal strength")
+```
+]
+
+---
+
+class: inverse, top
+
+.sticker-float[![feasts](resources/fable.svg)]
+
+.title[fable]
+
+* Tidy evolution of the forecast package
+* Models for time series forecasting
+* Tools for analysing and manipulating models
+
+<br>
+
+More information:
+
+* `r fa("github", fill = "white")` [tidyverts/fable](https://github.com/tidyverts/fable)
+* `r fa("globe", fill = "white")` [fable site](https://fable.tidyverts.org/)
+* `r fa("book", fill = "white")` [Forecasting: Principles and Practice (3rd Ed.)](https://otexts.com/fpp3/)
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Look at the data
+
+.left-code[
+```{r tourism-total-ets-data, eval=FALSE, echo=TRUE}
+aus_travel #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-data-output, ref.label="tourism-total-ets-data", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Specify and estimate a model
+
+.left-code[
+```{r tourism-total-ets-model, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(ETS(Trips)) #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-model-output, ref.label="tourism-total-ets-model", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Make some forecasts
+
+.left-code[
+```{r tourism-total-ets-forecast, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(ETS(Trips)) %>% 
+  forecast(h = "3 years") #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-forecast-output, ref.label="tourism-total-ets-forecast", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Visualise the results!
+
+.left-code[
+```{r tourism-total-ets-plot, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(ETS(Trips)) %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(aus_travel) #<<
+```
+]
+.right-plot[
+```{r tourism-total-ets-plot-output, ref.label="tourism-total-ets-plot", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+
+---
+class: top
+
+# Forecasting with fable
+
+### Estimate multiple models
+
+.left-code[
+```{r tourism-total-many-mdls, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")), #<<
+    ets_a = ETS(Trips ~ trend("A")), #<<
+    arima = ARIMA(Trips) #<<
+  )
+```
+]
+.right-plot[
+```{r tourism-total-many-mdls-output, ref.label="tourism-total-many-mdls", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Forecasts from multiple models
+
+.left-code[
+```{r tourism-total-many-plot, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  forecast(h = "3 years") %>% #<<
+  autoplot(aus_travel, level = NULL) #<<
+```
+]
+.right-plot[
+```{r tourism-total-many-plot-output, ref.label="tourism-total-many-plot", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br>
+
+.larger[
+# Flexibility with...
+]
+
+--
+
+<br>
+.center[
+.larger[
+## Combination forecasting
+]
+
+(models are better when they work together)*
+]
+
+.small-print[
+\* Most of the time, performance improvements not guaranteed! :)
+]
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+--
+
+.left-code[
+```{r tourism-total-many-mdls-recall, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  )
+```
+]
+.right-plot[
+```{r tourism-total-many-mdls-recall-output, ref.label="tourism-total-many-mdls-recall", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+.left-code[
+```{r tourism-total-combn-1, eval=FALSE, echo=TRUE}
+aus_travel %>%
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3 #<<
+  )
+```
+]
+.right-plot[
+```{r tourism-total-combn-1-output, ref.label="tourism-total-combn-1", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+.left-code[
+```{r tourism-total-combn-fc, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3
+  ) %>% 
+  select(combn) %>% #<<
+  forecast(h = "3 years") #<<
+```
+]
+.right-plot[
+```{r tourism-total-combn-fc-output, ref.label="tourism-total-combn-fc", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+.left-code[
+```{r tourism-total-combn-fc-plot, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3
+  ) %>% 
+  select(combn) %>%
+  forecast(h = "3 years") %>% 
+  autoplot(aus_travel) #<<
+```
+]
+.right-plot[
+```{r tourism-total-combn-fc-plot-output, ref.label="tourism-total-combn-fc-plot", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+--
+
+.left-code[
+```{r tourism-purpose-stl-recall, echo = TRUE}
+aus_travel_stl <- aus_travel %>% 
+  STL(Trips ~ season(window = "periodic")) #<<
+```
+]
+
+.right-plot[
+```{r tourism-purpose-stl-recall-output}
+aus_travel_stl
+```
+
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+```{r tourism-purpose-stl-plot-recall, echo = TRUE, eval = FALSE}
+aus_travel_stl <- aus_travel %>% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %>% 
+  autoplot() #<<
+```
+]
+
+.right-plot[
+```{r tourism-purpose-stl-plot-recall-output, echo = FALSE, fig.height = 5.8, fig.width=8}
+aus_travel_stl %>% 
+  autoplot() + 
+  xlab(NULL) + 
+  theme(legend.position = "right")
+```
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+```{r tourism-purpose-stl-mdl-deseas, echo = TRUE, eval = FALSE}
+aus_travel_stl <- aus_travel %>% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %>% 
+  model(
+    deseas = ETS(trend + remainder) #<<
+  ) %>%
+  forecast(h = "3 years") %>% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+```{r tourism-purpose-stl-mdl-deseas-output, ref.label="tourism-purpose-stl-mdl-deseas", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+```{r tourism-purpose-stl-mdl-seas, echo = TRUE, eval = FALSE}
+aus_travel_stl <- aus_travel %>% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %>% 
+  model(
+    seas = SNAIVE(season_year) #<<
+  ) %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+```{r tourism-purpose-stl-mdl-seas-output, ref.label="tourism-purpose-stl-mdl-seas", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+```{r tourism-purpose-stl-mdl, echo = TRUE, eval = FALSE}
+aus_travel_stl <- aus_travel %>% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %>% 
+  model(
+    hybrid = ETS(trend + remainder) +#<<
+      SNAIVE(season_year) #<<
+  ) %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+```{r tourism-purpose-stl-mdl-output, ref.label="tourism-purpose-stl-mdl", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+```{r tourism-purpose-stl-mdl-alt, echo = TRUE, eval = FALSE}
+aus_travel %>%
+  model(
+    hybrid = decomposition_model(#<<
+      STL, Trips ~ season(window = "periodic"),#<<
+      ETS(trend + remainder),#<<
+      SNAIVE(season_year) #<<
+    )#<<
+  ) %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+```{r tourism-purpose-stl-mdl-alt-output, ref.label="tourism-purpose-stl-mdl-alt", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br>
+
+.larger[
+# Flexibility with...
+]
+
+--
+
+<br>
+.center[
+.larger[
+## Extensibility
+]
+
+(get other people to implement models for you)
+]
+
+---
+class: top
+
+# Adding new models to fable
+
+.pull-left[
+```{r extensible-mdls, echo = TRUE, eval = FALSE}
+library(fasster) #<<
+library(fable.prophet) #<<
+aus_travel %>% 
+ model(
+  fasster = fasster(Trips ~ season("year") + poly(2)), #<<
+  prophet = prophet(Trips ~ season("year")) #<<
+ ) %>% 
+ forecast(h = "3 years") %>% 
+ autoplot(aus_travel, level = NULL)
+```
+]
+.pull-right[
+```{r extensible-mdls-output, ref.label="extensible-mdls", echo=FALSE, cache=TRUE, fig.height = 5.8, fig.width=8}
+```
+]
+
+--
+
+* Direct comparison of new models
+* Unified modelling interface
+* Ensemble and hybrid support
+* and more...
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+--
+
+```{r summary, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% 
+  group_by(Purpose) %>% 
+  summarise(Trips = sum(Trips)) %>% 
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ets_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>% 
+  forecast(h = "3 years")
+```
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-1, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% #<<
+  group_by(Purpose) %>%
+  summarise(Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ets_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>% 
+  forecast(h = "3 years")
+```
+
+### Tidy temporal data suitable for the future of time series.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-2, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse) #<<
+tsibble::tourism %>% 
+  group_by(Purpose) %>% #<<
+  summarise(Trips = sum(Trips)) %>% #<<
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ets_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>% 
+  forecast(h = "3 years")
+```
+
+### Integrates seamlessly with the tidyverse.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-3, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% 
+  group_by(Purpose) %>%
+  summarise(Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")), #<<
+        ets_a = ETS(Trips ~ trend("A")), #<<
+        arima = ARIMA(Trips), #<<
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>% 
+  forecast(h = "3 years")
+```
+
+### Flexible, and succinct formula model specification.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-4, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% 
+  group_by(Purpose) %>%
+  summarise(Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ets_a = ETS(Trips ~ trend("A")),
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)), #<<
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% #<<
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>% 
+  forecast(h = "3 years")
+```
+
+### Extensible by design.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-5, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% 
+  group_by(Purpose) %>%
+  summarise(Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ets_a = ETS(Trips ~ trend("A")),
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)), 
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>% #<<
+  forecast(h = "3 years")
+```
+
+### Natural interface for model combinations.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary `r fa("search", fill = "white")`]
+
+```{r summary-6, eval = FALSE, echo = TRUE}
+library(fable)
+library(tidyverse)
+tsibble::tourism %>% 
+  group_by(Purpose) %>%
+  summarise(Trips = sum(Trips)) %>%
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ets_a = ETS(Trips ~ trend("A")),
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)), 
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %>% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %>%
+  forecast(h = "3 years") #<<
+```
+
+### Distributional forecasts in a data format.
+
+---
+class: inverse, center
+
+# Acknowledgements
+
+.pull-left[
+.face-border[![Rob Hyndman](https://pbs.twimg.com/profile_images/1103150025981321216/dV3Wz_ql_400x400.png)]
+
+Rob Hyndman
+]
+.pull-right[
+.face-border[![Earo Wang](https://pbs.twimg.com/profile_images/1122341439063519233/YanRXXLu_400x400.jpg)]
+
+Earo Wang
+]
+
+--
+
+### Join our group.
+
+Monash University is now hiring in business analytics.
+
+See [bit.ly/monash-ba](bit.ly/monash-ba) for details.
+
+---
+
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Thanks! `r fa("comments", fill = "white")`]
+
+.larger[
+`r fa("globe", fill = "white")` Learn more: [fable.tidyverts.org](https://fable.tidyverts.org/)
+
+`r fa("chart-line", fill = "white")` Keep updated: [tidyverts.org](http://www.tidyverts.org)
+
+`r fa("desktop", fill = "white")` Review slides: [slides.mitchelloharawild.com/user2019](https://slides.mitchelloharawild.com/user2019)
+
+<br>
+
+.bottom[This work is licensed as `r fa("creative-commons", fill="white")` BY-NC 4.0.]
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br> 
+
+.title[Bonus]
+
+<br>
+<br>
+
+.larger[
+## Accuracy evaluation
+]
+
+---
+class: top
+
+# Forecast accuracy evaluation
+
+```{r, fig.height = 3}
+aus_total <- aus_travel %>% 
+  summarise(Trips = sum(Trips))
+fit <- aus_total %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(ETS(Trips))
+fit %>% 
+  forecast(h = "3 years") %>% 
+  autoplot(aus_total) + 
+  autolayer(augment(fit), .fitted, colour = "blue", linetype = "dashed") + 
+  geom_vline(aes(xintercept = yearquarter("2014 Q4"))) + 
+  geom_label(aes(x=x, y=y, label=label), 
+                 data = tibble(
+                   x = yearquarter(c("2006 Q2", "2016 Q3")), 
+                   y = c(13000, 13000), 
+                   label = c("Training", "Test")
+                 )
+  ) + 
+  theme(legend.position = "right")
+```
+
+--
+
+### MASE: Mean absolute scaled error
+
+$$\text{MASE} = \dfrac{1}{h}\sum_{t = T+1}^{T+h}\left|\frac{\displaystyle e_{t}}{\text{scale}}\right|, \hspace{2em}\text{scale} = \displaystyle\frac{1}{T-m}\sum_{t=m+1}^T |y_{t}-y_{t-m}|$$
+
+???
+
+The scale is the mean absolute error (MAE) of the seasonal naive model. Essentially, MASE is an accuracy measure relative to the seasonal naive model.
+
+---
+
+class: top
+
+# Comparing multiple models
+
+### Forecast accuracy
+
+.left-code[
+```{r tourism-total-many-fc-acc, eval=FALSE, echo=TRUE}
+aus_travel %>% 
+  filter(Quarter < yearquarter("2015 Q1")) %>% #<<
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  forecast(h = "3 years") %>%
+  accuracy(aus_travel) %>%  #<<
+  arrange(MASE) #<<
+```
+]
+.right-plot[
+```{r tourism-total-many-fc-acc-output, ref.label="tourism-total-many-fc-acc", echo=FALSE, cache=TRUE, fig.height = 6}
+```
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br> 
+
+.title[Bonus]
+
+<br>
+<br>
+
+.larger[
+## Forecast reconciliation
+]
+
+---
+
+# Forecast reconciliation
+
+```{r}
+library(collapsibleTree)
+collapsibleTree(key_data(tourism), root = "Total Tourism", 
+                hierarchy = c("Purpose", "State", "Region"),
+                zoomable = FALSE, height = 550, fontSize = 14, width = "100%")
+```
+
+---
+
+# Consider _all_ series in the data...
+
+```{r tourism-agg, echo = TRUE}
+tourism_aggregated <- tourism %>% 
+  aggregate_key((State / Region) * Purpose, Trips = sum(Trips)) #<<
+```
+
+```{r tourism-agg-print, echo = FALSE}
+tourism_aggregated
+```
+
+---
+
+# Modelling may take a while...
+
+--
+
+### Fortunately, this is embarrassingly parallel!
+
+```{r tourism-agg-mdl, echo = TRUE, cache = TRUE}
+library(future) #<<
+plan(multiprocess) #<<
+tourism_fit <- tourism_aggregated %>%
+  filter(Quarter < yearquarter("2015 Q1")) %>% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %>% 
+  mutate(combn = (ets_n + ets_a + arima)/3)
+```
+```{r tourism-agg-mdl-print, echo = FALSE}
+tourism_fit
+```
+
+---
+
+# Forecast reconciliation
+
+### MinT with covariance shrink
+
+```{r, tourism-agg-mint-fc, echo = TRUE}
+tourism_fc_reconciled <- tourism_fit %>% 
+  reconcile(coherent = min_trace(combn, method = "shrink")) %>% #<<
+  forecast(h = "3 years")
+```
+
+```{r, tourism-agg-mint-fc-out}
+tourism_fc_reconciled
+```
+
+
+.bottom[
+#### (Interface for reconciliation is still experimental.)
+]
+
+---
+
+# Forecast reconciliation
+
+### Is it better? Forecast accuracy
+
+```{r, tourism-agg-mint-median-out, echo=TRUE}
+tourism_fc_reconciled %>% 
+  accuracy(tourism_aggregated) %>% 
+  group_by(.model) %>%
+  summarise_at(vars(ME:ACF1), median) %>% 
+  arrange(MASE)
+```
+
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+<br> 
+
+.title[Bonus]
+
+<br>
+<br>
+
+.larger[
+## Multivariate modelling
+]
+
+---
+
+# Multivariate modelling
+
+```{r mv-data, echo = TRUE}
+lung_deaths <- cbind(mdeaths, fdeaths) %>% 
+  as_tsibble(pivot_longer = FALSE)
+```
+```{r mv-data-output}
+lung_deaths
+```
+
+---
+
+# Multivariate modelling
+
+```{r mv-var, echo = TRUE}
+lung_deaths %>% 
+  model(VAR(vars(mdeaths, fdeaths) ~ AR(3) + fourier("year", 4))) %>% #<<
+  forecast() %>% 
+  autoplot(lung_deaths)
+```

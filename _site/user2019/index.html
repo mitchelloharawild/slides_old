@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>fable::useR2019</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Mitchell O’Hara-Wild" />
+    <meta name="date" content="2019-11-06" />
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <script src="libs/d3/d3.min.js"></script>
+    <link href="libs/collapsibleTree/collapsibleTree.css" rel="stylesheet" />
+    <script src="libs/collapsibleTree-binding/collapsibleTree.js"></script>
+    <link rel="stylesheet" href="./libs/slides.css" type="text/css" />
+    <link rel="stylesheet" href="./libs/animate.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+class: inverse
+
+
+
+
+&lt;style type="text/css"&gt;
+/* custom.css */
+.left-code {
+  color: #777;
+  width: 40%;
+  height: 92%;
+  float: left;
+}
+.right-plot {
+  width: 58%;
+  float: right;
+  padding-left: 1%;
+}
+&lt;/style&gt;
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.larger[
+# Flexible futures
+## for **fable** functionality
+]
+
+.bottom[
+### Mitchell O'Hara-Wild (&lt;svg style="height:0.8em;top:.04em;position:relative;fill:#1da1f2;" viewBox="0 0 512 512"&gt;&lt;path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/&gt;&lt;/svg&gt;[@mitchoharawild](https://twitter.com/mitchoharawild))
+&lt;br&gt;
+### 11 July 2019
+### Slides @ [slides.mitchelloharawild.com/user2019](https://slides.mitchelloharawild.com/user2019)
+]
+
+---
+class: center
+
+.animated.fadeIn[
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+]
+
+
+---
+class: center
+
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+.animated.fadeIn[
+.sticker[![tsibbledata](resources/tsibbledata.svg)]
+.sticker[![feasts](resources/feasts.svg)]
+.sticker[![tsibble](resources/tsibble.svg)]
+
+## [tidyverts.org](http://www.tidyverts.org)
+]
+
+---
+class: center
+
+## Forecasting with the tidyverts
+
+.sticker[![fable](resources/fable.svg)]
+
+.sticker[![tsibbledata](resources/tsibbledata.svg)]
+.sticker[![feasts](resources/feasts.svg)]
+.sticker[![tsibble](resources/tsibble.svg)]
+
+## [tidyverts.org](http://www.tidyverts.org)
+
+.animated.fadeIn[
+.sticker-hint[
+(see me later for some stickers!)
+]
+]
+
+---
+
+class: inverse, top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+.title[tsibble]
+
+* A modern temporal data structure
+* Provides tools for time-related analysis
+* Integrates seamlessly with the tidyverse
+
+&lt;br&gt;
+
+More information:
+
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/&gt;&lt;/svg&gt; [tidyverts/tsibble](https://github.com/tidyverts/tsibble)
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M336.5 160C322 70.7 287.8 8 248 8s-74 62.7-88.5 152h177zM152 256c0 22.2 1.2 43.5 3.3 64h185.3c2.1-20.5 3.3-41.8 3.3-64s-1.2-43.5-3.3-64H155.3c-2.1 20.5-3.3 41.8-3.3 64zm324.7-96c-28.6-67.9-86.5-120.4-158-141.6 24.4 33.8 41.2 84.7 50 141.6h108zM177.2 18.4C105.8 39.6 47.8 92.1 19.3 160h108c8.7-56.9 25.5-107.8 49.9-141.6zM487.4 192H372.7c2.1 21 3.3 42.5 3.3 64s-1.2 43-3.3 64h114.6c5.5-20.5 8.6-41.8 8.6-64s-3.1-43.5-8.5-64zM120 256c0-21.5 1.2-43 3.3-64H8.6C3.2 212.5 0 233.8 0 256s3.2 43.5 8.6 64h114.6c-2-21-3.2-42.5-3.2-64zm39.5 96c14.5 89.3 48.7 152 88.5 152s74-62.7 88.5-152h-177zm159.3 141.6c71.4-21.2 129.4-73.7 158-141.6h-108c-8.8 56.9-25.6 107.8-50 141.6zM19.3 352c28.6 67.9 86.5 120.4 158 141.6-24.4-33.8-41.2-84.7-50-141.6h-108z"/&gt;&lt;/svg&gt; [tsibble site](https://tsibble.tidyverts.org/)
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 576 512"&gt;&lt;path d="M528 0H48C21.5 0 0 21.5 0 48v320c0 26.5 21.5 48 48 48h192l-16 48h-72c-13.3 0-24 10.7-24 24s10.7 24 24 24h272c13.3 0 24-10.7 24-24s-10.7-24-24-24h-72l-16-48h192c26.5 0 48-21.5 48-48V48c0-26.5-21.5-48-48-48zm-16 352H64V64h448v288z"/&gt;&lt;/svg&gt; [rstudio::conf 2019](https://slides.earo.me/rstudioconf19/#1) &amp; [useR!2018](http://slides.earo.me/useR18/)
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+
+# Tidy temporal data structure
+
+### From `ts` to `tsibble`
+
+
+```r
+co2
+```
+
+```
+#&gt;         Jan    Feb    Mar    Apr    May    Jun    Jul    Aug    Sep    Oct    Nov    Dec
+#&gt; 1959 315.42 316.31 316.50 317.56 318.13 318.00 316.39 314.65 313.68 313.18 314.66 315.43
+#&gt; 1960 316.27 316.81 317.42 318.87 319.87 319.43 318.01 315.74 314.00 313.68 314.84 316.03
+#&gt; 1961 316.73 317.54 318.38 319.31 320.42 319.61 318.42 316.63 314.83 315.16 315.94 316.85
+#&gt; 1962 317.78 318.40 319.53 320.42 320.85 320.45 319.45 317.25 316.11 315.27 316.53 317.53
+#&gt; 1963 318.58 318.92 319.70 321.22 322.08 321.31 319.58 317.61 316.05 315.83 316.91 318.20
+#&gt; 1964 319.41 320.07 320.74 321.40 322.06 321.73 320.27 318.54 316.54 316.71 317.53 318.55
+#&gt; 1965 319.27 320.28 320.73 321.97 322.00 321.71 321.05 318.71 317.66 317.14 318.70 319.25
+#&gt; 1966 320.46 321.43 322.23 323.54 323.91 323.59 322.24 320.20 318.48 317.94 319.63 320.87
+#&gt; 1967 322.17 322.34 322.88 324.25 324.83 323.93 322.38 320.76 319.10 319.24 320.56 321.80
+#&gt; 1968 322.40 322.99 323.73 324.86 325.40 325.20 323.98 321.95 320.18 320.09 321.16 322.74
+#&gt; 1969 323.83 324.26 325.47 326.50 327.21 326.54 325.72 323.50 322.22 321.62 322.69 323.95
+#&gt; 1970 324.89 325.82 326.77 327.97 327.91 327.50 326.18 324.53 322.93 322.90 323.85 324.96
+#&gt; 1971 326.01 326.51 327.01 327.62 328.76 328.40 327.20 325.27 323.20 323.40 324.63 325.85
+#&gt; 1972 326.60 327.47 327.58 329.56 329.90 328.92 327.88 326.16 324.68 325.04 326.34 327.39
+#&gt; 1973 328.37 329.40 330.14 331.33 332.31 331.90 330.70 329.15 327.35 327.02 327.99 328.48
+#&gt; 1974 329.18 330.55 331.32 332.48 332.92 332.08 331.01 329.23 327.27 327.21 328.29 329.41
+#&gt; 1975 330.23 331.25 331.87 333.14 333.80 333.43 331.73 329.90 328.40 328.17 329.32 330.59
+#&gt; 1976 331.58 332.39 333.33 334.41 334.71 334.17 332.89 330.77 329.14 328.78 330.14 331.52
+#&gt; 1977 332.75 333.24 334.53 335.90 336.57 336.10 334.76 332.59 331.42 330.98 332.24 333.68
+#&gt; 1978 334.80 335.22 336.47 337.59 337.84 337.72 336.37 334.51 332.60 332.38 333.75 334.78
+#&gt; 1979 336.05 336.59 337.79 338.71 339.30 339.12 337.56 335.92 333.75 333.70 335.12 336.56
+#&gt; 1980 337.84 338.19 339.91 340.60 341.29 341.00 339.39 337.43 335.72 335.84 336.93 338.04
+#&gt; 1981 339.06 340.30 341.21 342.33 342.74 342.08 340.32 338.26 336.52 336.68 338.19 339.44
+#&gt; 1982 340.57 341.44 342.53 343.39 343.96 343.18 341.88 339.65 337.81 337.69 339.09 340.32
+#&gt; 1983 341.20 342.35 342.93 344.77 345.58 345.14 343.81 342.21 339.69 339.82 340.98 342.82
+#&gt; 1984 343.52 344.33 345.11 346.88 347.25 346.62 345.22 343.11 340.90 341.18 342.80 344.04
+#&gt; 1985 344.79 345.82 347.25 348.17 348.74 348.07 346.38 344.51 342.92 342.62 344.06 345.38
+#&gt; 1986 346.11 346.78 347.68 349.37 350.03 349.37 347.76 345.73 344.68 343.99 345.48 346.72
+#&gt; 1987 347.84 348.29 349.23 350.80 351.66 351.07 349.33 347.92 346.27 346.18 347.64 348.78
+#&gt; 1988 350.25 351.54 352.05 353.41 354.04 353.62 352.22 350.27 348.55 348.72 349.91 351.18
+#&gt; 1989 352.60 352.92 353.53 355.26 355.52 354.97 353.75 351.52 349.64 349.83 351.14 352.37
+#&gt; 1990 353.50 354.55 355.23 356.04 357.00 356.07 354.67 352.76 350.82 351.04 352.69 354.07
+#&gt; 1991 354.59 355.63 357.03 358.48 359.22 358.12 356.06 353.92 352.05 352.11 353.64 354.89
+#&gt; 1992 355.88 356.63 357.72 359.07 359.58 359.17 356.94 354.92 352.94 353.23 354.09 355.33
+#&gt; 1993 356.63 357.10 358.32 359.41 360.23 359.55 357.53 355.48 353.67 353.95 355.30 356.78
+#&gt; 1994 358.34 358.89 359.95 361.25 361.67 360.94 359.55 357.49 355.84 356.00 357.59 359.05
+#&gt; 1995 359.98 361.03 361.66 363.48 363.82 363.30 361.94 359.50 358.11 357.80 359.61 360.74
+#&gt; 1996 362.09 363.29 364.06 364.76 365.45 365.01 363.70 361.54 359.51 359.65 360.80 362.38
+#&gt; 1997 363.23 364.06 364.61 366.40 366.84 365.68 364.52 362.57 360.24 360.83 362.49 364.34
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+
+# Tidy temporal data structure
+
+### From `ts` to `tsibble`
+
+
+```r
+as_tsibble(co2)
+```
+
+```
+#&gt; # A tsibble: 468 x 2 [1M]
+#&gt;       index value
+#&gt;       &lt;mth&gt; &lt;dbl&gt;
+#&gt;  1 1959 Jan  315.
+#&gt;  2 1959 Feb  316.
+#&gt;  3 1959 Mar  316.
+#&gt;  4 1959 Apr  318.
+#&gt;  5 1959 May  318.
+#&gt;  6 1959 Jun  318 
+#&gt;  7 1959 Jul  316.
+#&gt;  8 1959 Aug  315.
+#&gt;  9 1959 Sep  314.
+#&gt; 10 1959 Oct  313.
+#&gt; # … with 458 more rows
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+# Tidy temporal data structure
+
+### Domestic tourism in Australia
+
+
+```r
+library(tsibble)
+tourism
+```
+
+```
+#&gt; # A tsibble: 24,320 x 5 [1Q]
+#&gt; # Key:       Region, State, Purpose [304]
+#&gt;    Quarter Region   State           Purpose  Trips
+#&gt;      &lt;qtr&gt; &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;    &lt;dbl&gt;
+#&gt;  1 1998 Q1 Adelaide South Australia Business  135.
+#&gt;  2 1998 Q2 Adelaide South Australia Business  110.
+#&gt;  3 1998 Q3 Adelaide South Australia Business  166.
+#&gt;  4 1998 Q4 Adelaide South Australia Business  127.
+#&gt;  5 1999 Q1 Adelaide South Australia Business  137.
+#&gt;  6 1999 Q2 Adelaide South Australia Business  200.
+#&gt;  7 1999 Q3 Adelaide South Australia Business  169.
+#&gt;  8 1999 Q4 Adelaide South Australia Business  134.
+#&gt;  9 2000 Q1 Adelaide South Australia Business  154.
+#&gt; 10 2000 Q2 Adelaide South Australia Business  169.
+#&gt; # … with 24,310 more rows
+```
+
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)].sticker-float[![dplyr](resources/dplyr.svg)]
+
+# Exploring tourism in Australia
+
+### How does travel vary by purpose?
+
+
+```r
+library(dplyr)
+aus_travel &lt;- tourism %&gt;% 
+  group_by(Purpose) %&gt;% 
+  summarise(Trips = sum(Trips))
+```
+
+
+```
+#&gt; # A tsibble: 320 x 3 [1Q]
+#&gt; # Key:       Purpose [4]
+#&gt;    Purpose  Quarter Trips
+#&gt;    &lt;chr&gt;      &lt;qtr&gt; &lt;dbl&gt;
+#&gt;  1 Business 1998 Q1 3599.
+#&gt;  2 Business 1998 Q2 3724.
+#&gt;  3 Business 1998 Q3 4356.
+#&gt;  4 Business 1998 Q4 3796.
+#&gt;  5 Business 1999 Q1 3335.
+#&gt;  6 Business 1999 Q2 4714.
+#&gt;  7 Business 1999 Q3 4190.
+#&gt;  8 Business 1999 Q4 3701.
+#&gt;  9 Business 2000 Q1 3562.
+#&gt; 10 Business 2000 Q2 4018.
+#&gt; # … with 310 more rows
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### How does travel vary by purpose?
+
+
+```r
+library(ggplot2)
+aus_travel %&gt;% 
+  ggplot(aes(x = Quarter, y = Trips, colour = Purpose)) + 
+  geom_line()
+```
+
+&lt;img src="figure/tourism-purpose-plot-output-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: inverse, top
+
+.sticker-float[![feasts](resources/feasts.svg)]
+
+.title[feasts]
+
+* Graphics for time series
+* Decompositions into structural components
+* Feature extraction (summaries and statistical tests)
+
+&lt;br&gt;
+
+More information:
+
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/&gt;&lt;/svg&gt; [tidyverts/feasts](https://github.com/tidyverts/feasts)
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M336.5 160C322 70.7 287.8 8 248 8s-74 62.7-88.5 152h177zM152 256c0 22.2 1.2 43.5 3.3 64h185.3c2.1-20.5 3.3-41.8 3.3-64s-1.2-43.5-3.3-64H155.3c-2.1 20.5-3.3 41.8-3.3 64zm324.7-96c-28.6-67.9-86.5-120.4-158-141.6 24.4 33.8 41.2 84.7 50 141.6h108zM177.2 18.4C105.8 39.6 47.8 92.1 19.3 160h108c8.7-56.9 25.5-107.8 49.9-141.6zM487.4 192H372.7c2.1 21 3.3 42.5 3.3 64s-1.2 43-3.3 64h114.6c5.5-20.5 8.6-41.8 8.6-64s-3.1-43.5-8.5-64zM120 256c0-21.5 1.2-43 3.3-64H8.6C3.2 212.5 0 233.8 0 256s3.2 43.5 8.6 64h114.6c-2-21-3.2-42.5-3.2-64zm39.5 96c14.5 89.3 48.7 152 88.5 152s74-62.7 88.5-152h-177zm159.3 141.6c71.4-21.2 129.4-73.7 158-141.6h-108c-8.8 56.9-25.6 107.8-50 141.6zM19.3 352c28.6 67.9 86.5 120.4 158 141.6-24.4-33.8-41.2-84.7-50-141.6h-108z"/&gt;&lt;/svg&gt; [feasts site](https://feasts.tidyverts.org/)
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 576 512"&gt;&lt;path d="M416 192c0-88.4-93.1-160-208-160S0 103.6 0 192c0 34.3 14.1 65.9 38 92-13.4 30.2-35.5 54.2-35.8 54.5-2.2 2.3-2.8 5.7-1.5 8.7S4.8 352 8 352c36.6 0 66.9-12.3 88.7-25 32.2 15.7 70.3 25 111.3 25 114.9 0 208-71.6 208-160zm122 220c23.9-26 38-57.7 38-92 0-66.9-53.5-124.2-129.3-148.1.9 6.6 1.3 13.3 1.3 20.1 0 105.9-107.7 192-240 192-10.8 0-21.3-.8-31.7-1.9C207.8 439.6 281.8 480 368 480c41 0 79.1-9.2 111.3-25 21.8 12.7 52.1 25 88.7 25 3.2 0 6.1-1.9 7.3-4.8 1.3-2.9.7-6.3-1.5-8.7-.3-.3-22.4-24.2-35.8-54.5z"/&gt;&lt;/svg&gt; Rob Hyndman's talk at 11:48 tomorrow! (Ariane 1+2)
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/feasts.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### Time series graphics: season plots
+
+.pull-left[
+
+```r
+library(feasts)
+aus_travel %&gt;% 
+  gg_season(Trips)
+```
+
+&lt;img src="figure/tourism-purpose-seasonplot-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+&lt;br&gt;
+Highlights seasonal structure by wrapping the x-axis over seasonal periods (years).
+
+- Peak holiday travel in Q1 (summer)
+- Peak business travel in Q2 &amp; Q3
+- Peak visiting travel in Q4 &amp; Q1
+- Other travel is largely non-seasonal
+]
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/feasts.svg)]
+
+# Exploring tourism in Australia
+
+### Time series decomposition: STL
+
+
+```r
+aus_travel_stl &lt;- aus_travel %&gt;% 
+  STL(Trips ~ season(window = "periodic"))
+```
+
+```
+#&gt; # A dable:           320 x 7 [1Q]
+#&gt; # Key:               Purpose [4]
+#&gt; # STL Decomposition: Trips = trend + season_year + remainder
+#&gt;    Purpose  Quarter Trips trend season_year remainder season_adjust
+#&gt;    &lt;chr&gt;      &lt;qtr&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;
+#&gt;  1 Business 1998 Q1 3599. 3949.      -577.      227.          4175.
+#&gt;  2 Business 1998 Q2 3724. 3910.       109.     -296.          3614.
+#&gt;  3 Business 1998 Q3 4356. 3886.       393.       77.0         3963.
+#&gt;  4 Business 1998 Q4 3796. 3910.        74.0    -188.          3722.
+#&gt;  5 Business 1999 Q1 3335. 4034.      -577.     -123.          3911.
+#&gt;  6 Business 1999 Q2 4714. 4034.       109.      571.          4605.
+#&gt;  7 Business 1999 Q3 4190. 4006.       393.     -210.          3797.
+#&gt;  8 Business 1999 Q4 3701. 3928.        74.0    -301.          3627.
+#&gt;  9 Business 2000 Q1 3562. 3889.      -577.      250.          4139.
+#&gt; 10 Business 2000 Q2 4018. 3981.       109.      -73.1         3908.
+#&gt; # … with 310 more rows
+```
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/feasts.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### Time series decomposition: STL
+
+
+```r
+aus_travel_stl %&gt;% 
+  autoplot()
+```
+
+&lt;img src="figure/tourism-purpose-stl-plot-output-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: top
+
+.sticker-float[![feasts](resources/feasts.svg)]
+
+# Exploring tourism in Australia
+
+### Time series features: STL
+
+
+```r
+aus_travel %&gt;% 
+  features(Trips, feature_set(tags = "stl"))
+```
+
+```
+#&gt; # A tibble: 4 x 8
+#&gt;   Purpose  trend_strength seasonal_strength_year spikiness linearity curvature seasonal_peak_year seasonal_trough_year
+#&gt;   &lt;chr&gt;             &lt;dbl&gt;                  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;              &lt;dbl&gt;                &lt;dbl&gt;
+#&gt; 1 Business          0.899                  0.785   496322.     2327.     3611.                  3                    1
+#&gt; 2 Holiday           0.813                  0.910  2540902.     2019.     4257.                  1                    3
+#&gt; 3 Other             0.927                  0.357     3537.     1410.      908.                  3                    1
+#&gt; 4 Visiting          0.926                  0.796   601067.     3897.     3070.                  1                    3
+```
+
+* All series are trended
+* Holiday travel is most seasonal, "Other" travel is least seasonal
+* Seasonal peaks and troughs switch are Q1 and Q3 (varied by purpose)
+
+---
+
+class: top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+# Exploring tourism in Australia
+
+### Seeing the bigger picture
+
+
+```r
+tourism
+```
+
+```
+#&gt; # A tsibble: 24,320 x 5 [1Q]
+#&gt; # Key:       Region, State, Purpose [304]
+#&gt;    Quarter Region   State           Purpose  Trips
+#&gt;      &lt;qtr&gt; &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;    &lt;dbl&gt;
+#&gt;  1 1998 Q1 Adelaide South Australia Business  135.
+#&gt;  2 1998 Q2 Adelaide South Australia Business  110.
+#&gt;  3 1998 Q3 Adelaide South Australia Business  166.
+#&gt;  4 1998 Q4 Adelaide South Australia Business  127.
+#&gt;  5 1999 Q1 Adelaide South Australia Business  137.
+#&gt;  6 1999 Q2 Adelaide South Australia Business  200.
+#&gt;  7 1999 Q3 Adelaide South Australia Business  169.
+#&gt;  8 1999 Q4 Adelaide South Australia Business  134.
+#&gt;  9 2000 Q1 Adelaide South Australia Business  154.
+#&gt; 10 2000 Q2 Adelaide South Australia Business  169.
+#&gt; # … with 24,310 more rows
+```
+
+---
+
+class: top
+
+.sticker-float[![feasts](resources/feasts.svg)].sticker-float[![ggplot2](resources/ggplot2.svg)]
+
+# Exploring tourism in Australia
+
+### Seeing the bigger picture
+
+
+```r
+tourism_features &lt;- tourism %&gt;% 
+  features(Trips, feature_set(tags = "stl"))
+```
+
+.full-width[
+&lt;img src="figure/tourism-features-plot-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+class: inverse, top
+
+.sticker-float[![feasts](resources/fable.svg)]
+
+.title[fable]
+
+* Tidy evolution of the forecast package
+* Models for time series forecasting
+* Tools for analysing and manipulating models
+
+&lt;br&gt;
+
+More information:
+
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/&gt;&lt;/svg&gt; [tidyverts/fable](https://github.com/tidyverts/fable)
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M336.5 160C322 70.7 287.8 8 248 8s-74 62.7-88.5 152h177zM152 256c0 22.2 1.2 43.5 3.3 64h185.3c2.1-20.5 3.3-41.8 3.3-64s-1.2-43.5-3.3-64H155.3c-2.1 20.5-3.3 41.8-3.3 64zm324.7-96c-28.6-67.9-86.5-120.4-158-141.6 24.4 33.8 41.2 84.7 50 141.6h108zM177.2 18.4C105.8 39.6 47.8 92.1 19.3 160h108c8.7-56.9 25.5-107.8 49.9-141.6zM487.4 192H372.7c2.1 21 3.3 42.5 3.3 64s-1.2 43-3.3 64h114.6c5.5-20.5 8.6-41.8 8.6-64s-3.1-43.5-8.5-64zM120 256c0-21.5 1.2-43 3.3-64H8.6C3.2 212.5 0 233.8 0 256s3.2 43.5 8.6 64h114.6c-2-21-3.2-42.5-3.2-64zm39.5 96c14.5 89.3 48.7 152 88.5 152s74-62.7 88.5-152h-177zm159.3 141.6c71.4-21.2 129.4-73.7 158-141.6h-108c-8.8 56.9-25.6 107.8-50 141.6zM19.3 352c28.6 67.9 86.5 120.4 158 141.6-24.4-33.8-41.2-84.7-50-141.6h-108z"/&gt;&lt;/svg&gt; [fable site](https://fable.tidyverts.org/)
+* &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 448 512"&gt;&lt;path d="M448 360V24c0-13.3-10.7-24-24-24H96C43 0 0 43 0 96v320c0 53 43 96 96 96h328c13.3 0 24-10.7 24-24v-16c0-7.5-3.5-14.3-8.9-18.7-4.2-15.4-4.2-59.3 0-74.7 5.4-4.3 8.9-11.1 8.9-18.6zM128 134c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm0 64c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm253.4 250H96c-17.7 0-32-14.3-32-32 0-17.6 14.4-32 32-32h285.4c-1.9 17.1-1.9 46.9 0 64z"/&gt;&lt;/svg&gt; [Forecasting: Principles and Practice (3rd Ed.)](https://otexts.com/fpp3/)
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Look at the data
+
+.left-code[
+
+```r
+*aus_travel
+```
+]
+.right-plot[
+
+```
+#&gt; # A tsibble: 320 x 3 [1Q]
+#&gt; # Key:       Purpose [4]
+#&gt;    Purpose  Quarter Trips
+#&gt;    &lt;chr&gt;      &lt;qtr&gt; &lt;dbl&gt;
+#&gt;  1 Business 1998 Q1 3599.
+#&gt;  2 Business 1998 Q2 3724.
+#&gt;  3 Business 1998 Q3 4356.
+#&gt;  4 Business 1998 Q4 3796.
+#&gt;  5 Business 1999 Q1 3335.
+#&gt;  6 Business 1999 Q2 4714.
+#&gt;  7 Business 1999 Q3 4190.
+#&gt;  8 Business 1999 Q4 3701.
+#&gt;  9 Business 2000 Q1 3562.
+#&gt; 10 Business 2000 Q2 4018.
+#&gt; # … with 310 more rows
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Specify and estimate a model
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+* model(ETS(Trips))
+```
+]
+.right-plot[
+
+```
+#&gt; # A mable: 4 x 2
+#&gt; # Key:     Purpose [4]
+#&gt;   Purpose  `ETS(Trips)`
+#&gt;   &lt;chr&gt;    &lt;model&gt;     
+#&gt; 1 Business &lt;ETS(M,N,A)&gt;
+#&gt; 2 Holiday  &lt;ETS(M,N,M)&gt;
+#&gt; 3 Other    &lt;ETS(M,N,A)&gt;
+#&gt; 4 Visiting &lt;ETS(M,N,M)&gt;
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Make some forecasts
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(ETS(Trips)) %&gt;% 
+* forecast(h = "3 years")
+```
+]
+.right-plot[
+
+```
+#&gt; # A fable: 48 x 5 [1Q]
+#&gt; # Key:     Purpose, .model [4]
+#&gt;    Purpose  .model     Quarter Trips .distribution  
+#&gt;    &lt;chr&gt;    &lt;chr&gt;        &lt;qtr&gt; &lt;dbl&gt; &lt;dist&gt;         
+#&gt;  1 Business ETS(Trips) 2018 Q1 4937. N(4937, 137658)
+#&gt;  2 Business ETS(Trips) 2018 Q2 5604. N(5604, 209086)
+#&gt;  3 Business ETS(Trips) 2018 Q3 5888. N(5888, 268396)
+#&gt;  4 Business ETS(Trips) 2018 Q4 5575. N(5575, 293305)
+#&gt;  5 Business ETS(Trips) 2019 Q1 4937. N(4937, 295999)
+#&gt;  6 Business ETS(Trips) 2019 Q2 5604. N(5604, 367634)
+#&gt;  7 Business ETS(Trips) 2019 Q3 5888. N(5888, 427147)
+#&gt;  8 Business ETS(Trips) 2019 Q4 5575. N(5575, 452257)
+#&gt;  9 Business ETS(Trips) 2020 Q1 4937. N(4937, 455161)
+#&gt; 10 Business ETS(Trips) 2020 Q2 5604. N(5604, 527003)
+#&gt; # … with 38 more rows
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Visualise the results!
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(ETS(Trips)) %&gt;% 
+  forecast(h = "3 years") %&gt;% 
+* autoplot(aus_travel)
+```
+]
+.right-plot[
+&lt;img src="figure/tourism-total-ets-plot-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+
+---
+class: top
+
+# Forecasting with fable
+
+### Estimate multiple models
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(
+*   ets_n = ETS(Trips ~ trend("N")),
+*   ets_a = ETS(Trips ~ trend("A")),
+*   arima = ARIMA(Trips)
+  )
+```
+]
+.right-plot[
+
+```
+#&gt; # A mable: 4 x 4
+#&gt; # Key:     Purpose [4]
+#&gt;   Purpose  ets_n        ets_a        arima                   
+#&gt;   &lt;chr&gt;    &lt;model&gt;      &lt;model&gt;      &lt;model&gt;                 
+#&gt; 1 Business &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(0,1,1)[4]&gt;
+#&gt; 2 Holiday  &lt;ETS(M,N,M)&gt; &lt;ETS(M,A,M)&gt; &lt;ARIMA(0,1,1)(0,1,1)[4]&gt;
+#&gt; 3 Other    &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(1,0,0)[4]&gt;
+#&gt; 4 Visiting &lt;ETS(M,N,M)&gt; &lt;ETS(A,A,A)&gt; &lt;ARIMA(1,0,1)(2,1,0)[4]&gt;
+```
+]
+
+---
+
+class: top
+
+# Forecasting with fable
+
+### Forecasts from multiple models
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %&gt;% 
+* forecast(h = "3 years") %&gt;%
+* autoplot(aus_travel, level = NULL)
+```
+]
+.right-plot[
+&lt;img src="figure/tourism-total-many-plot-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+&lt;br&gt;
+
+.larger[
+# Flexibility with...
+]
+
+--
+
+&lt;br&gt;
+.center[
+.larger[
+## Combination forecasting
+]
+
+(models are better when they work together)*
+]
+
+.small-print[
+\* Most of the time, performance improvements not guaranteed! :)
+]
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+--
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  )
+```
+]
+.right-plot[
+
+```
+#&gt; # A mable: 4 x 4
+#&gt; # Key:     Purpose [4]
+#&gt;   Purpose  ets_n        ets_a        arima                   
+#&gt;   &lt;chr&gt;    &lt;model&gt;      &lt;model&gt;      &lt;model&gt;                 
+#&gt; 1 Business &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(0,1,1)[4]&gt;
+#&gt; 2 Holiday  &lt;ETS(M,N,M)&gt; &lt;ETS(M,A,M)&gt; &lt;ARIMA(0,1,1)(0,1,1)[4]&gt;
+#&gt; 3 Other    &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(1,0,0)[4]&gt;
+#&gt; 4 Visiting &lt;ETS(M,N,M)&gt; &lt;ETS(A,A,A)&gt; &lt;ARIMA(1,0,1)(2,1,0)[4]&gt;
+```
+]
+
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+.left-code[
+
+```r
+aus_travel %&gt;%
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %&gt;% 
+  mutate(
+*   combn = (ets_n + ets_a + arima)/3
+  )
+```
+]
+.right-plot[
+
+```
+#&gt; # A mable: 4 x 5
+#&gt; # Key:     Purpose [4]
+#&gt;   Purpose  ets_n        ets_a        arima                    combn        
+#&gt;   &lt;chr&gt;    &lt;model&gt;      &lt;model&gt;      &lt;model&gt;                  &lt;model&gt;      
+#&gt; 1 Business &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(0,1,1)[4]&gt; &lt;COMBINATION&gt;
+#&gt; 2 Holiday  &lt;ETS(M,N,M)&gt; &lt;ETS(M,A,M)&gt; &lt;ARIMA(0,1,1)(0,1,1)[4]&gt; &lt;COMBINATION&gt;
+#&gt; 3 Other    &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(1,0,0)[4]&gt; &lt;COMBINATION&gt;
+#&gt; 4 Visiting &lt;ETS(M,N,M)&gt; &lt;ETS(A,A,A)&gt; &lt;ARIMA(1,0,1)(2,1,0)[4]&gt; &lt;COMBINATION&gt;
+```
+]
+
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %&gt;% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3
+  ) %&gt;% 
+* select(combn) %&gt;%
+* forecast(h = "3 years")
+```
+]
+.right-plot[
+
+```
+#&gt; # A fable: 48 x 5 [1Q]
+#&gt; # Key:     Purpose, .model [4]
+#&gt;    Purpose  .model Quarter Trips .distribution  
+#&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;qtr&gt; &lt;dbl&gt; &lt;dist&gt;         
+#&gt;  1 Business combn  2018 Q1 5004. N(5004, 122410)
+#&gt;  2 Business combn  2018 Q2 5731. N(5731, 174693)
+#&gt;  3 Business combn  2018 Q3 6036. N(6036, 218982)
+#&gt;  4 Business combn  2018 Q4 5759. N(5759, 244190)
+#&gt;  5 Business combn  2019 Q1 5144. N(5144, 260489)
+#&gt;  6 Business combn  2019 Q2 5871. N(5871, 321799)
+#&gt;  7 Business combn  2019 Q3 6176. N(6176, 375379)
+#&gt;  8 Business combn  2019 Q4 5898. N(5898, 409760)
+#&gt;  9 Business combn  2020 Q1 5284. N(5284, 435676)
+#&gt; 10 Business combn  2020 Q2 6010. N(6010, 507587)
+#&gt; # … with 38 more rows
+```
+]
+
+
+---
+
+class: top
+
+# Ensemble forecasting
+
+### A simple average of forecasts
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %&gt;% 
+  mutate(
+    combn = (ets_n + ets_a + arima)/3
+  ) %&gt;% 
+  select(combn) %&gt;%
+  forecast(h = "3 years") %&gt;% 
+* autoplot(aus_travel)
+```
+]
+.right-plot[
+&lt;img src="figure/tourism-total-combn-fc-plot-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+--
+
+.left-code[
+
+```r
+aus_travel_stl &lt;- aus_travel %&gt;% 
+* STL(Trips ~ season(window = "periodic"))
+```
+]
+
+.right-plot[
+
+```
+#&gt; # A dable:           320 x 7 [1Q]
+#&gt; # Key:               Purpose [4]
+#&gt; # STL Decomposition: Trips = trend + season_year + remainder
+#&gt;    Purpose  Quarter Trips trend season_year remainder season_adjust
+#&gt;    &lt;chr&gt;      &lt;qtr&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;
+#&gt;  1 Business 1998 Q1 3599. 3949.      -577.      227.          4175.
+#&gt;  2 Business 1998 Q2 3724. 3910.       109.     -296.          3614.
+#&gt;  3 Business 1998 Q3 4356. 3886.       393.       77.0         3963.
+#&gt;  4 Business 1998 Q4 3796. 3910.        74.0    -188.          3722.
+#&gt;  5 Business 1999 Q1 3335. 4034.      -577.     -123.          3911.
+#&gt;  6 Business 1999 Q2 4714. 4034.       109.      571.          4605.
+#&gt;  7 Business 1999 Q3 4190. 4006.       393.     -210.          3797.
+#&gt;  8 Business 1999 Q4 3701. 3928.        74.0    -301.          3627.
+#&gt;  9 Business 2000 Q1 3562. 3889.      -577.      250.          4139.
+#&gt; 10 Business 2000 Q2 4018. 3981.       109.      -73.1         3908.
+#&gt; # … with 310 more rows
+```
+
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+
+```r
+aus_travel_stl &lt;- aus_travel %&gt;% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %&gt;% 
+* autoplot()
+```
+]
+
+.right-plot[
+&lt;img src="figure/tourism-purpose-stl-plot-recall-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+
+```r
+aus_travel_stl &lt;- aus_travel %&gt;% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %&gt;% 
+  model(
+*   deseas = ETS(trend + remainder)
+  ) %&gt;%
+  forecast(h = "3 years") %&gt;% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+&lt;img src="figure/tourism-purpose-stl-mdl-deseas-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+
+```r
+aus_travel_stl &lt;- aus_travel %&gt;% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %&gt;% 
+  model(
+*   seas = SNAIVE(season_year)
+  ) %&gt;% 
+  forecast(h = "3 years") %&gt;% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+&lt;img src="figure/tourism-purpose-stl-mdl-seas-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+
+```r
+aus_travel_stl &lt;- aus_travel %&gt;% 
+  STL(Trips ~ season(window = "periodic"))
+aus_travel_stl %&gt;% 
+  model(
+*   hybrid = ETS(trend + remainder) +
+*     SNAIVE(season_year)
+  ) %&gt;% 
+  forecast(h = "3 years") %&gt;% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+&lt;img src="figure/tourism-purpose-stl-mdl-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+
+---
+
+class: top
+
+# Hybrid forecasting
+
+### Combining forecasts of decomposed components
+
+.left-code[
+
+```r
+aus_travel %&gt;%
+  model(
+*   hybrid = decomposition_model(
+*     STL, Trips ~ season(window = "periodic"),
+*     ETS(trend + remainder),
+*     SNAIVE(season_year)
+*   )
+  ) %&gt;% 
+  forecast(h = "3 years") %&gt;% 
+  autoplot(aus_travel_stl)
+```
+]
+
+.right-plot[
+&lt;img src="figure/tourism-purpose-stl-mdl-alt-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+&lt;br&gt;
+
+.larger[
+# Flexibility with...
+]
+
+--
+
+&lt;br&gt;
+.center[
+.larger[
+## Extensibility
+]
+
+(get other people to implement models for you)
+]
+
+---
+class: top
+
+# Adding new models to fable
+
+.pull-left[
+
+```r
+*library(fasster)
+*library(fable.prophet)
+aus_travel %&gt;% 
+ model(
+* fasster = fasster(Trips ~ season("year") + poly(2)),
+* prophet = prophet(Trips ~ season("year"))
+ ) %&gt;% 
+ forecast(h = "3 years") %&gt;% 
+ autoplot(aus_travel, level = NULL)
+```
+]
+.pull-right[
+&lt;img src="figure/extensible-mdls-output-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+* Direct comparison of new models
+* Unified modelling interface
+* Ensemble and hybrid support
+* and more...
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+--
+
+
+```r
+library(fable)
+library(tidyverse)
+tsibble::tourism %&gt;% 
+  group_by(Purpose) %&gt;% 
+  summarise(Trips = sum(Trips)) %&gt;% 
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ets_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;% 
+  forecast(h = "3 years")
+```
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+
+```r
+library(fable)
+library(tidyverse)
+*tsibble::tourism %&gt;%
+  group_by(Purpose) %&gt;%
+  summarise(Trips = sum(Trips)) %&gt;%
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ets_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;% 
+  forecast(h = "3 years")
+```
+
+### Tidy temporal data suitable for the future of time series.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+
+```r
+library(fable)
+*library(tidyverse)
+tsibble::tourism %&gt;% 
+* group_by(Purpose) %&gt;%
+* summarise(Trips = sum(Trips)) %&gt;%
+  model(ets_n = ETS(Trips ~ trend("N")), 
+        ets_a = ETS(Trips ~ trend("A")), 
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;% 
+  forecast(h = "3 years")
+```
+
+### Integrates seamlessly with the tidyverse.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+
+```r
+library(fable)
+library(tidyverse)
+tsibble::tourism %&gt;% 
+  group_by(Purpose) %&gt;%
+  summarise(Trips = sum(Trips)) %&gt;%
+* model(ets_n = ETS(Trips ~ trend("N")),
+*       ets_a = ETS(Trips ~ trend("A")),
+*       arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;% 
+  forecast(h = "3 years")
+```
+
+### Flexible, and succinct formula model specification.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+
+```r
+library(fable)
+library(tidyverse)
+tsibble::tourism %&gt;% 
+  group_by(Purpose) %&gt;%
+  summarise(Trips = sum(Trips)) %&gt;%
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ets_a = ETS(Trips ~ trend("A")),
+        arima = ARIMA(Trips),
+*       fasster = fasster::fasster(Trips ~ season("year") + poly(2)),
+*       prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;%
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;% 
+  forecast(h = "3 years")
+```
+
+### Extensible by design.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+
+```r
+library(fable)
+library(tidyverse)
+tsibble::tourism %&gt;% 
+  group_by(Purpose) %&gt;%
+  summarise(Trips = sum(Trips)) %&gt;%
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ets_a = ETS(Trips ~ trend("A")),
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)), 
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;% 
+* mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;%
+  forecast(h = "3 years")
+```
+
+### Natural interface for model combinations.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Summary &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/&gt;&lt;/svg&gt;]
+
+
+```r
+library(fable)
+library(tidyverse)
+tsibble::tourism %&gt;% 
+  group_by(Purpose) %&gt;%
+  summarise(Trips = sum(Trips)) %&gt;%
+  model(ets_n = ETS(Trips ~ trend("N")),
+        ets_a = ETS(Trips ~ trend("A")),
+        arima = ARIMA(Trips),
+        fasster = fasster::fasster(Trips ~ season("year") + poly(2)), 
+        prophet = fable.prophet::prophet(Trips ~ season("year"))) %&gt;% 
+  mutate(combn = (ets_n + ets_a + arima + fasster)/4) %&gt;%
+* forecast(h = "3 years")
+```
+
+### Distributional forecasts in a data format.
+
+---
+class: inverse, center
+
+# Acknowledgements
+
+.pull-left[
+.face-border[![Rob Hyndman](https://pbs.twimg.com/profile_images/1103150025981321216/dV3Wz_ql_400x400.png)]
+
+Rob Hyndman
+]
+.pull-right[
+.face-border[![Earo Wang](https://pbs.twimg.com/profile_images/1122341439063519233/YanRXXLu_400x400.jpg)]
+
+Earo Wang
+]
+
+--
+
+### Join our group.
+
+Monash University is now hiring in business analytics.
+
+See [bit.ly/monash-ba](bit.ly/monash-ba) for details.
+
+---
+
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Thanks! &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 576 512"&gt;&lt;path d="M416 192c0-88.4-93.1-160-208-160S0 103.6 0 192c0 34.3 14.1 65.9 38 92-13.4 30.2-35.5 54.2-35.8 54.5-2.2 2.3-2.8 5.7-1.5 8.7S4.8 352 8 352c36.6 0 66.9-12.3 88.7-25 32.2 15.7 70.3 25 111.3 25 114.9 0 208-71.6 208-160zm122 220c23.9-26 38-57.7 38-92 0-66.9-53.5-124.2-129.3-148.1.9 6.6 1.3 13.3 1.3 20.1 0 105.9-107.7 192-240 192-10.8 0-21.3-.8-31.7-1.9C207.8 439.6 281.8 480 368 480c41 0 79.1-9.2 111.3-25 21.8 12.7 52.1 25 88.7 25 3.2 0 6.1-1.9 7.3-4.8 1.3-2.9.7-6.3-1.5-8.7-.3-.3-22.4-24.2-35.8-54.5z"/&gt;&lt;/svg&gt;]
+
+.larger[
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M336.5 160C322 70.7 287.8 8 248 8s-74 62.7-88.5 152h177zM152 256c0 22.2 1.2 43.5 3.3 64h185.3c2.1-20.5 3.3-41.8 3.3-64s-1.2-43.5-3.3-64H155.3c-2.1 20.5-3.3 41.8-3.3 64zm324.7-96c-28.6-67.9-86.5-120.4-158-141.6 24.4 33.8 41.2 84.7 50 141.6h108zM177.2 18.4C105.8 39.6 47.8 92.1 19.3 160h108c8.7-56.9 25.5-107.8 49.9-141.6zM487.4 192H372.7c2.1 21 3.3 42.5 3.3 64s-1.2 43-3.3 64h114.6c5.5-20.5 8.6-41.8 8.6-64s-3.1-43.5-8.5-64zM120 256c0-21.5 1.2-43 3.3-64H8.6C3.2 212.5 0 233.8 0 256s3.2 43.5 8.6 64h114.6c-2-21-3.2-42.5-3.2-64zm39.5 96c14.5 89.3 48.7 152 88.5 152s74-62.7 88.5-152h-177zm159.3 141.6c71.4-21.2 129.4-73.7 158-141.6h-108c-8.8 56.9-25.6 107.8-50 141.6zM19.3 352c28.6 67.9 86.5 120.4 158 141.6-24.4-33.8-41.2-84.7-50-141.6h-108z"/&gt;&lt;/svg&gt; Learn more: [fable.tidyverts.org](https://fable.tidyverts.org/)
+
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 512 512"&gt;&lt;path d="M500 384c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H12c-6.6 0-12-5.4-12-12V76c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v308h436zM456 96H344c-21.4 0-32.1 25.9-17 41l32.9 32.9-72 72.9-55.6-55.6c-4.7-4.7-12.2-4.7-16.9 0L96.4 305c-4.7 4.6-4.8 12.2-.2 16.9l28.5 29.4c4.7 4.8 12.4 4.9 17.1.1l82.1-82.1 55.5 55.5c4.7 4.7 12.3 4.7 17 0l109.2-109.2L439 249c15.1 15.1 41 4.4 41-17V120c0-13.3-10.7-24-24-24z"/&gt;&lt;/svg&gt; Keep updated: [tidyverts.org](http://www.tidyverts.org)
+
+&lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 576 512"&gt;&lt;path d="M528 0H48C21.5 0 0 21.5 0 48v320c0 26.5 21.5 48 48 48h192l-16 48h-72c-13.3 0-24 10.7-24 24s10.7 24 24 24h272c13.3 0 24-10.7 24-24s-10.7-24-24-24h-72l-16-48h192c26.5 0 48-21.5 48-48V48c0-26.5-21.5-48-48-48zm-16 352H64V64h448v288z"/&gt;&lt;/svg&gt; Review slides: [slides.mitchelloharawild.com/user2019](https://slides.mitchelloharawild.com/user2019)
+
+&lt;br&gt;
+
+.bottom[This work is licensed as &lt;svg style="height:0.8em;top:.04em;position:relative;fill:white;" viewBox="0 0 496 512"&gt;&lt;path d="M254.8 214.8l-33.2 17.3c-9.4-19.6-25.2-19.9-27.5-19.9-22.1 0-33.2 14.6-33.2 43.8 0 23.6 9.2 43.8 33.2 43.8 14.5 0 24.7-7.1 30.6-21.3l30.6 15.5c-6.2 11.5-25.7 39-65.1 39-22.6 0-74-10.3-74-77.1 0-58.7 43-77.1 72.6-77.1 30.8.2 52.7 12.1 66 36zm143.1 0l-32.8 17.3c-9.5-19.8-25.7-19.9-27.9-19.9-22.1 0-33.2 14.6-33.2 43.8 0 23.6 9.2 43.8 33.2 43.8 14.5 0 24.6-7.1 30.5-21.3l31 15.5c-2.1 3.7-21.4 39-65.1 39-22.7 0-74-9.9-74-77.1 0-58.7 43-77.1 72.6-77.1 30.8.2 52.7 12.1 65.7 36zM247.6 8C389.4 8 496 118.1 496 256c0 147.1-118.5 248-248.4 248C113.6 504 0 394.5 0 256 0 123.1 104.7 8 247.6 8zm.8 44.7C130.2 52.7 44.7 150.6 44.7 256c0 109.8 91.2 202.8 203.7 202.8 103.2 0 202.8-81.1 202.8-202.8.1-113.8-90.2-203.3-202.8-203.3z"/&gt;&lt;/svg&gt; BY-NC 4.0.]
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+&lt;br&gt; 
+
+.title[Bonus]
+
+&lt;br&gt;
+&lt;br&gt;
+
+.larger[
+## Accuracy evaluation
+]
+
+---
+class: top
+
+# Forecast accuracy evaluation
+
+&lt;img src="figure/unnamed-chunk-2-1.svg" style="display: block; margin: auto;" /&gt;
+
+--
+
+### MASE: Mean absolute scaled error
+
+`$$\text{MASE} = \dfrac{1}{h}\sum_{t = T+1}^{T+h}\left|\frac{\displaystyle e_{t}}{\text{scale}}\right|, \hspace{2em}\text{scale} = \displaystyle\frac{1}{T-m}\sum_{t=m+1}^T |y_{t}-y_{t-m}|$$`
+
+???
+
+The scale is the mean absolute error (MAE) of the seasonal naive model. Essentially, MASE is an accuracy measure relative to the seasonal naive model.
+
+---
+
+class: top
+
+# Comparing multiple models
+
+### Forecast accuracy
+
+.left-code[
+
+```r
+aus_travel %&gt;% 
+* filter(Quarter &lt; yearquarter("2015 Q1")) %&gt;%
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %&gt;% 
+  forecast(h = "3 years") %&gt;%
+* accuracy(aus_travel) %&gt;%
+* arrange(MASE)
+```
+]
+.right-plot[
+
+```
+#&gt; # A tibble: 12 x 10
+#&gt;    .model Purpose  .type     ME  RMSE    MAE   MPE  MAPE  MASE    ACF1
+#&gt;    &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 arima  Other    Test   -12.4  112.   76.3 -1.59  5.62 0.646 -0.133 
+#&gt;  2 ets_a  Other    Test   -43.9  101.   80.7 -3.66  6.03 0.683 -0.567 
+#&gt;  3 ets_n  Other    Test    71.4  129.  102.   4.62  7.10 0.863 -0.0743
+#&gt;  4 arima  Visiting Test   538.   686.  539.   6.18  6.20 1.30   0.281 
+#&gt;  5 ets_a  Holiday  Test   581.   700.  581.   5.36  5.36 1.46   0.304 
+#&gt;  6 ets_a  Visiting Test   612.   758.  612.   7.03  7.03 1.47   0.317 
+#&gt;  7 ets_a  Business Test   423.   573.  448.   7.66  8.27 1.51   0.505 
+#&gt;  8 ets_n  Visiting Test   652.   800.  652.   7.53  7.53 1.57   0.367 
+#&gt;  9 ets_n  Business Test   511.   645.  513.   9.50  9.55 1.73   0.569 
+#&gt; 10 ets_n  Holiday  Test   939.  1061.  939.   8.69  8.69 2.36   0.415 
+#&gt; 11 arima  Business Test   820.   968.  883.  15.1  16.6  2.97   0.233 
+#&gt; 12 arima  Holiday  Test  1261.  1380. 1261.  11.7  11.7  3.16   0.425
+```
+]
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+&lt;br&gt; 
+
+.title[Bonus]
+
+&lt;br&gt;
+&lt;br&gt;
+
+.larger[
+## Forecast reconciliation
+]
+
+---
+
+# Forecast reconciliation
+
+<div id="htmlwidget-98dc638aec296b6b43a8" style="width:100%;height:550px;" class="collapsibleTree html-widget"></div>
+<script type="application/json" data-for="htmlwidget-98dc638aec296b6b43a8">{"x":{"data":{"name":"Total Tourism","children":[{"name":"Business","children":[{"name":"South Australia","children":[{"name":"Adelaide"},{"name":"Adelaide Hills"},{"name":"Barossa"},{"name":"Clare Valley"},{"name":"Eyre Peninsula"},{"name":"Fleurieu Peninsula"},{"name":"Flinders Ranges and Outback"},{"name":"Kangaroo Island"},{"name":"Limestone Coast"},{"name":"Murraylands"},{"name":"Riverland"},{"name":"Yorke Peninsula"}]},{"name":"Northern Territory","children":[{"name":"Alice Springs"},{"name":"Barkly"},{"name":"Darwin"},{"name":"Kakadu Arnhem"},{"name":"Katherine Daly"},{"name":"Lasseter"},{"name":"MacDonnell"}]},{"name":"Western Australia","children":[{"name":"Australia's Coral Coast"},{"name":"Australia's Golden Outback"},{"name":"Australia's North West"},{"name":"Australia's South West"},{"name":"Experience Perth"}]},{"name":"Victoria","children":[{"name":"Ballarat"},{"name":"Bendigo Loddon"},{"name":"Central Highlands"},{"name":"Central Murray"},{"name":"Geelong and the Bellarine"},{"name":"Gippsland"},{"name":"Goulburn"},{"name":"Great Ocean Road"},{"name":"High Country"},{"name":"Lakes"},{"name":"Macedon"},{"name":"Mallee"},{"name":"Melbourne"},{"name":"Melbourne East"},{"name":"Murray East"},{"name":"Peninsula"},{"name":"Phillip Island"},{"name":"Spa Country"},{"name":"Upper Yarra"},{"name":"Western Grampians"},{"name":"Wimmera"}]},{"name":"New South Wales","children":[{"name":"Blue Mountains"},{"name":"Capital Country"},{"name":"Central Coast"},{"name":"Central NSW"},{"name":"Hunter"},{"name":"New England North West"},{"name":"North Coast NSW"},{"name":"Outback NSW"},{"name":"Riverina"},{"name":"Snowy Mountains"},{"name":"South Coast"},{"name":"Sydney"},{"name":"The Murray"}]},{"name":"Queensland","children":[{"name":"Brisbane"},{"name":"Bundaberg"},{"name":"Central Queensland"},{"name":"Darling Downs"},{"name":"Fraser Coast"},{"name":"Gold Coast"},{"name":"Mackay"},{"name":"Northern"},{"name":"Outback"},{"name":"Sunshine Coast"},{"name":"Tropical North Queensland"},{"name":"Whitsundays"}]},{"name":"ACT","children":[{"name":"Canberra"}]},{"name":"Tasmania","children":[{"name":"East Coast"},{"name":"Hobart and the South"},{"name":"Launceston, Tamar and the North"},{"name":"North West"},{"name":"Wilderness West"}]}]},{"name":"Holiday","children":[{"name":"South Australia","children":[{"name":"Adelaide"},{"name":"Adelaide Hills"},{"name":"Barossa"},{"name":"Clare Valley"},{"name":"Eyre Peninsula"},{"name":"Fleurieu Peninsula"},{"name":"Flinders Ranges and Outback"},{"name":"Kangaroo Island"},{"name":"Limestone Coast"},{"name":"Murraylands"},{"name":"Riverland"},{"name":"Yorke Peninsula"}]},{"name":"Northern Territory","children":[{"name":"Alice Springs"},{"name":"Barkly"},{"name":"Darwin"},{"name":"Kakadu Arnhem"},{"name":"Katherine Daly"},{"name":"Lasseter"},{"name":"MacDonnell"}]},{"name":"Western Australia","children":[{"name":"Australia's Coral Coast"},{"name":"Australia's Golden Outback"},{"name":"Australia's North West"},{"name":"Australia's South West"},{"name":"Experience Perth"}]},{"name":"Victoria","children":[{"name":"Ballarat"},{"name":"Bendigo Loddon"},{"name":"Central Highlands"},{"name":"Central Murray"},{"name":"Geelong and the Bellarine"},{"name":"Gippsland"},{"name":"Goulburn"},{"name":"Great Ocean Road"},{"name":"High Country"},{"name":"Lakes"},{"name":"Macedon"},{"name":"Mallee"},{"name":"Melbourne"},{"name":"Melbourne East"},{"name":"Murray East"},{"name":"Peninsula"},{"name":"Phillip Island"},{"name":"Spa Country"},{"name":"Upper Yarra"},{"name":"Western Grampians"},{"name":"Wimmera"}]},{"name":"New South Wales","children":[{"name":"Blue Mountains"},{"name":"Capital Country"},{"name":"Central Coast"},{"name":"Central NSW"},{"name":"Hunter"},{"name":"New England North West"},{"name":"North Coast NSW"},{"name":"Outback NSW"},{"name":"Riverina"},{"name":"Snowy Mountains"},{"name":"South Coast"},{"name":"Sydney"},{"name":"The Murray"}]},{"name":"Queensland","children":[{"name":"Brisbane"},{"name":"Bundaberg"},{"name":"Central Queensland"},{"name":"Darling Downs"},{"name":"Fraser Coast"},{"name":"Gold Coast"},{"name":"Mackay"},{"name":"Northern"},{"name":"Outback"},{"name":"Sunshine Coast"},{"name":"Tropical North Queensland"},{"name":"Whitsundays"}]},{"name":"ACT","children":[{"name":"Canberra"}]},{"name":"Tasmania","children":[{"name":"East Coast"},{"name":"Hobart and the South"},{"name":"Launceston, Tamar and the North"},{"name":"North West"},{"name":"Wilderness West"}]}]},{"name":"Other","children":[{"name":"South Australia","children":[{"name":"Adelaide"},{"name":"Adelaide Hills"},{"name":"Barossa"},{"name":"Clare Valley"},{"name":"Eyre Peninsula"},{"name":"Fleurieu Peninsula"},{"name":"Flinders Ranges and Outback"},{"name":"Kangaroo Island"},{"name":"Limestone Coast"},{"name":"Murraylands"},{"name":"Riverland"},{"name":"Yorke Peninsula"}]},{"name":"Northern Territory","children":[{"name":"Alice Springs"},{"name":"Barkly"},{"name":"Darwin"},{"name":"Kakadu Arnhem"},{"name":"Katherine Daly"},{"name":"Lasseter"},{"name":"MacDonnell"}]},{"name":"Western Australia","children":[{"name":"Australia's Coral Coast"},{"name":"Australia's Golden Outback"},{"name":"Australia's North West"},{"name":"Australia's South West"},{"name":"Experience Perth"}]},{"name":"Victoria","children":[{"name":"Ballarat"},{"name":"Bendigo Loddon"},{"name":"Central Highlands"},{"name":"Central Murray"},{"name":"Geelong and the Bellarine"},{"name":"Gippsland"},{"name":"Goulburn"},{"name":"Great Ocean Road"},{"name":"High Country"},{"name":"Lakes"},{"name":"Macedon"},{"name":"Mallee"},{"name":"Melbourne"},{"name":"Melbourne East"},{"name":"Murray East"},{"name":"Peninsula"},{"name":"Phillip Island"},{"name":"Spa Country"},{"name":"Upper Yarra"},{"name":"Western Grampians"},{"name":"Wimmera"}]},{"name":"New South Wales","children":[{"name":"Blue Mountains"},{"name":"Capital Country"},{"name":"Central Coast"},{"name":"Central NSW"},{"name":"Hunter"},{"name":"New England North West"},{"name":"North Coast NSW"},{"name":"Outback NSW"},{"name":"Riverina"},{"name":"Snowy Mountains"},{"name":"South Coast"},{"name":"Sydney"},{"name":"The Murray"}]},{"name":"Queensland","children":[{"name":"Brisbane"},{"name":"Bundaberg"},{"name":"Central Queensland"},{"name":"Darling Downs"},{"name":"Fraser Coast"},{"name":"Gold Coast"},{"name":"Mackay"},{"name":"Northern"},{"name":"Outback"},{"name":"Sunshine Coast"},{"name":"Tropical North Queensland"},{"name":"Whitsundays"}]},{"name":"ACT","children":[{"name":"Canberra"}]},{"name":"Tasmania","children":[{"name":"East Coast"},{"name":"Hobart and the South"},{"name":"Launceston, Tamar and the North"},{"name":"North West"},{"name":"Wilderness West"}]}]},{"name":"Visiting","children":[{"name":"South Australia","children":[{"name":"Adelaide"},{"name":"Adelaide Hills"},{"name":"Barossa"},{"name":"Clare Valley"},{"name":"Eyre Peninsula"},{"name":"Fleurieu Peninsula"},{"name":"Flinders Ranges and Outback"},{"name":"Kangaroo Island"},{"name":"Limestone Coast"},{"name":"Murraylands"},{"name":"Riverland"},{"name":"Yorke Peninsula"}]},{"name":"Northern Territory","children":[{"name":"Alice Springs"},{"name":"Barkly"},{"name":"Darwin"},{"name":"Kakadu Arnhem"},{"name":"Katherine Daly"},{"name":"Lasseter"},{"name":"MacDonnell"}]},{"name":"Western Australia","children":[{"name":"Australia's Coral Coast"},{"name":"Australia's Golden Outback"},{"name":"Australia's North West"},{"name":"Australia's South West"},{"name":"Experience Perth"}]},{"name":"Victoria","children":[{"name":"Ballarat"},{"name":"Bendigo Loddon"},{"name":"Central Highlands"},{"name":"Central Murray"},{"name":"Geelong and the Bellarine"},{"name":"Gippsland"},{"name":"Goulburn"},{"name":"Great Ocean Road"},{"name":"High Country"},{"name":"Lakes"},{"name":"Macedon"},{"name":"Mallee"},{"name":"Melbourne"},{"name":"Melbourne East"},{"name":"Murray East"},{"name":"Peninsula"},{"name":"Phillip Island"},{"name":"Spa Country"},{"name":"Upper Yarra"},{"name":"Western Grampians"},{"name":"Wimmera"}]},{"name":"New South Wales","children":[{"name":"Blue Mountains"},{"name":"Capital Country"},{"name":"Central Coast"},{"name":"Central NSW"},{"name":"Hunter"},{"name":"New England North West"},{"name":"North Coast NSW"},{"name":"Outback NSW"},{"name":"Riverina"},{"name":"Snowy Mountains"},{"name":"South Coast"},{"name":"Sydney"},{"name":"The Murray"}]},{"name":"Queensland","children":[{"name":"Brisbane"},{"name":"Bundaberg"},{"name":"Central Queensland"},{"name":"Darling Downs"},{"name":"Fraser Coast"},{"name":"Gold Coast"},{"name":"Mackay"},{"name":"Northern"},{"name":"Outback"},{"name":"Sunshine Coast"},{"name":"Tropical North Queensland"},{"name":"Whitsundays"}]},{"name":"ACT","children":[{"name":"Canberra"}]},{"name":"Tasmania","children":[{"name":"East Coast"},{"name":"Hobart and the South"},{"name":"Launceston, Tamar and the North"},{"name":"North West"},{"name":"Wilderness West"}]}]}]},"options":{"hierarchy":["Purpose","State","Region"],"input":null,"attribute":"leafCount","linkLength":null,"fontSize":14,"tooltip":false,"collapsed":true,"zoomable":false,"margin":{"top":20,"bottom":20,"left":116,"right":242},"fill":"lightsteelblue"}},"evals":[],"jsHooks":[]}</script>
+
+---
+
+# Consider _all_ series in the data...
+
+
+```r
+tourism_aggregated &lt;- tourism %&gt;% 
+* aggregate_key((State / Region) * Purpose, Trips = sum(Trips))
+```
+
+
+```
+#&gt; # A tsibble: 34,000 x 5 [1Q]
+#&gt; # Key:       State, Region, Purpose [425]
+#&gt;    State   Region  Purpose Quarter  Trips
+#&gt;    &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;qtr&gt;  &lt;dbl&gt;
+#&gt;  1 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1998 Q1 23182.
+#&gt;  2 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1998 Q2 20323.
+#&gt;  3 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1998 Q3 19827.
+#&gt;  4 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1998 Q4 20830.
+#&gt;  5 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1999 Q1 22087.
+#&gt;  6 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1999 Q2 21458.
+#&gt;  7 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1999 Q3 19914.
+#&gt;  8 &lt;total&gt; &lt;total&gt; &lt;total&gt; 1999 Q4 20028.
+#&gt;  9 &lt;total&gt; &lt;total&gt; &lt;total&gt; 2000 Q1 22339.
+#&gt; 10 &lt;total&gt; &lt;total&gt; &lt;total&gt; 2000 Q2 19941.
+#&gt; # … with 33,990 more rows
+```
+
+---
+
+# Modelling may take a while...
+
+--
+
+### Fortunately, this is embarrassingly parallel!
+
+
+```r
+*library(future)
+*plan(multiprocess)
+tourism_fit &lt;- tourism_aggregated %&gt;%
+  filter(Quarter &lt; yearquarter("2015 Q1")) %&gt;% 
+  model(
+    ets_n = ETS(Trips ~ trend("N")),
+    ets_a = ETS(Trips ~ trend("A")),
+    arima = ARIMA(Trips)
+  ) %&gt;% 
+  mutate(combn = (ets_n + ets_a + arima)/3)
+```
+
+```
+#&gt; # A mable: 425 x 7
+#&gt; # Key:     State, Region, Purpose [425]
+#&gt;    State   Region  Purpose  ets_n        ets_a        arima                            combn        
+#&gt;    &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;    &lt;model&gt;      &lt;model&gt;      &lt;model&gt;                          &lt;model&gt;      
+#&gt;  1 &lt;total&gt; &lt;total&gt; &lt;total&gt;  &lt;ETS(M,N,M)&gt; &lt;ETS(M,A,M)&gt; &lt;ARIMA(1,0,1)(1,1,0)[4]&gt;         &lt;COMBINATION&gt;
+#&gt;  2 &lt;total&gt; &lt;total&gt; Business &lt;ETS(M,N,M)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,0,1)(2,1,0)[4]&gt;         &lt;COMBINATION&gt;
+#&gt;  3 &lt;total&gt; &lt;total&gt; Holiday  &lt;ETS(M,N,M)&gt; &lt;ETS(M,A,M)&gt; &lt;ARIMA(0,0,0)(0,1,2)[4]&gt;         &lt;COMBINATION&gt;
+#&gt;  4 &lt;total&gt; &lt;total&gt; Other    &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,1,1)(1,0,0)[4]&gt;         &lt;COMBINATION&gt;
+#&gt;  5 &lt;total&gt; &lt;total&gt; Visiting &lt;ETS(M,N,M)&gt; &lt;ETS(A,A,A)&gt; &lt;ARIMA(1,0,1)(2,1,0)[4]&gt;         &lt;COMBINATION&gt;
+#&gt;  6 ACT     &lt;total&gt; &lt;total&gt;  &lt;ETS(A,N,N)&gt; &lt;ETS(M,A,N)&gt; &lt;ARIMA(0,0,0) w/ mean&gt;           &lt;COMBINATION&gt;
+#&gt;  7 ACT     &lt;total&gt; Business &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,0,0)(1,0,0)[4] w/ mean&gt; &lt;COMBINATION&gt;
+#&gt;  8 ACT     &lt;total&gt; Holiday  &lt;ETS(M,N,A)&gt; &lt;ETS(M,A,A)&gt; &lt;ARIMA(0,0,0)(1,0,0)[4] w/ mean&gt; &lt;COMBINATION&gt;
+#&gt;  9 ACT     &lt;total&gt; Other    &lt;ETS(A,N,N)&gt; &lt;ETS(M,A,N)&gt; &lt;ARIMA(0,0,0) w/ mean&gt;           &lt;COMBINATION&gt;
+#&gt; 10 ACT     &lt;total&gt; Visiting &lt;ETS(A,N,N)&gt; &lt;ETS(A,A,N)&gt; &lt;ARIMA(1,0,0) w/ mean&gt;           &lt;COMBINATION&gt;
+#&gt; # … with 415 more rows
+```
+
+---
+
+# Forecast reconciliation
+
+### MinT with covariance shrink
+
+
+```r
+tourism_fc_reconciled &lt;- tourism_fit %&gt;% 
+* reconcile(coherent = min_trace(combn, method = "shrink")) %&gt;%
+  forecast(h = "3 years")
+```
+
+
+```
+#&gt; # A fable: 25,500 x 7 [1Q]
+#&gt; # Key:     State, Region, Purpose, .model [2,125]
+#&gt;    State   Region  Purpose .model Quarter  Trips .distribution    
+#&gt;    &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;    &lt;qtr&gt;  &lt;dbl&gt; &lt;dist&gt;           
+#&gt;  1 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2015 Q1 25108. N(25108, 1078489)
+#&gt;  2 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2015 Q2 23339. N(23339, 1171475)
+#&gt;  3 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2015 Q3 22771. N(22771, 1343242)
+#&gt;  4 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2015 Q4 23417. N(23417, 1661871)
+#&gt;  5 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2016 Q1 25108. N(25108, 2188347)
+#&gt;  6 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2016 Q2 23339. N(23339, 2130906)
+#&gt;  7 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2016 Q3 22771. N(22771, 2256904)
+#&gt;  8 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2016 Q4 23417. N(23417, 2628507)
+#&gt;  9 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2017 Q1 25108. N(25108, 3300157)
+#&gt; 10 &lt;total&gt; &lt;total&gt; &lt;total&gt; ets_n  2017 Q2 23339. N(23339, 3092023)
+#&gt; # … with 25,490 more rows
+```
+
+
+.bottom[
+#### (Interface for reconciliation is still experimental.)
+]
+
+---
+
+# Forecast reconciliation
+
+### Is it better? Forecast accuracy
+
+
+```r
+tourism_fc_reconciled %&gt;% 
+  accuracy(tourism_aggregated) %&gt;% 
+  group_by(.model) %&gt;%
+  summarise_at(vars(ME:ACF1), median) %&gt;% 
+  arrange(MASE)
+```
+
+```
+#&gt; # A tibble: 5 x 8
+#&gt;   .model      ME  RMSE   MAE   MPE  MAPE  MASE    ACF1
+#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 coherent  6.34  18.2  14.6 NA     22.6 0.934 -0.0834
+#&gt; 2 ets_n     8.73  18.9  15.1  7.23  25.0 0.982 -0.0852
+#&gt; 3 combn     8.77  19.4  15.5  7.39  24.1 0.995 -0.0848
+#&gt; 4 ets_a     7.65  20.2  15.8 NA     26.0 1.03  -0.0733
+#&gt; 5 arima     9.01  20.3  16.5  8.07  26.2 1.07  -0.0849
+```
+
+
+---
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+&lt;br&gt; 
+
+.title[Bonus]
+
+&lt;br&gt;
+&lt;br&gt;
+
+.larger[
+## Multivariate modelling
+]
+
+---
+
+# Multivariate modelling
+
+
+```r
+lung_deaths &lt;- cbind(mdeaths, fdeaths) %&gt;% 
+  as_tsibble(pivot_longer = FALSE)
+```
+
+```
+#&gt; # A tsibble: 72 x 3 [1M]
+#&gt;       index mdeaths fdeaths
+#&gt;       &lt;mth&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 1974 Jan    2134     901
+#&gt;  2 1974 Feb    1863     689
+#&gt;  3 1974 Mar    1877     827
+#&gt;  4 1974 Apr    1877     677
+#&gt;  5 1974 May    1492     522
+#&gt;  6 1974 Jun    1249     406
+#&gt;  7 1974 Jul    1280     441
+#&gt;  8 1974 Aug    1131     393
+#&gt;  9 1974 Sep    1209     387
+#&gt; 10 1974 Oct    1492     582
+#&gt; # … with 62 more rows
+```
+
+---
+
+# Multivariate modelling
+
+
+```r
+lung_deaths %&gt;% 
+* model(VAR(vars(mdeaths, fdeaths) ~ AR(3) + fourier("year", 4))) %&gt;%
+  forecast() %&gt;% 
+  autoplot(lung_deaths)
+```
+
+&lt;img src="figure/mv-var-1.svg" style="display: block; margin: auto;" /&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="./libs/remark-latest.min.js"></script>
+<script src="./libs/jquery/jquery.min.js"></script>
+<script src="./libs/slides.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"ratio": "16:9",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
