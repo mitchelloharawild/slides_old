@@ -1,0 +1,1504 @@
+---
+title: "fable::TFEAM"
+subtitle: "Tidy forecasting in R"
+author: "Mitchell O'Hara-Wild"
+date: '30/10/2018'
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    css: ["libs/slides.css",  "libs/animate.css"]
+    lib_dir: libs
+    seal: false
+    nature:
+      highlightStyle: github
+      ratio: '16:9'
+      highlightLines: true
+      countIncrementalSlides: false
+      beforeInit: ["libs/jquery/jquery.min.js", "libs/slides.js"]
+---
+class: inverse
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE, width = 120)
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(fontawesome)
+library(lubridate)
+library(htmltools)
+
+library(tsibble)
+library(fasster)
+library(fable)
+
+opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, comment = "#>",
+  fig.path = 'figure/', cache.path = 'cache/', fig.align = 'center',
+  fig.width = 12, fig.height = 4, fig.show = 'hold',
+  cache = TRUE, external = TRUE, dev = 'svglite', dev.args = list(bg = "transparent")
+)
+
+mp4_vid <- function(src){
+  HTML(
+    paste0(
+      '<video autoplay>
+        <source src="', src, '" type="video/mp4">
+      </video>'
+    )
+  )
+}
+
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+   lines <- options$output.lines
+   if (is.null(lines)) {
+     return(hook_output(x, options))  # pass to default hook
+   }
+   x <- unlist(strsplit(x, "\n"))
+   more <- "..."
+   if (length(lines)==1) {        # first n lines
+     if (length(x) > lines) {
+       # truncate the output, but add ....
+       x <- c(head(x, lines), more)
+     }
+   } else {
+     x <- c(more, x[lines], more)
+   }
+   # paste these lines together
+   x <- paste(c(x, ""), collapse = "\n")
+   hook_output(x, options)
+ })
+
+theme_set(
+  theme_grey(base_size = 16) +
+  theme(
+    legend.position = "bottom",
+    plot.background = element_rect(fill = "transparent"),
+    legend.background = element_rect(fill = "transparent")
+  )
+)
+```
+
+.title[fable]
+.sticker-float[![fable](resources/fable.svg)]
+
+## Tidy forecasting in R
+
+.bottom[
+### Mitchell O'Hara-Wild (`r fa("twitter", fill="#1da1f2")`[@mitchoharawild](https://twitter.com/mitchoharawild))
+### Rob Hyndman (`r fa("twitter", fill="#1da1f2")`[@robjhyndman](https://twitter.com/robjhyndman/))
+### 8 November 2018
+### Slides @ [slides.mitchelloharawild.com/fable-tfeam](https://slides.mitchelloharawild.com/fable-tfeam)
+]
+
+---
+class: center
+
+.animated.fadeIn[
+## Time-series data is changing
+
+<hr>
+]
+
+???
+
+Before - annual/quarterly/monthly data was common
+Now - daily/hourly/etc is common, which complicates analysis
+
+---
+class: center
+
+## Time-series data is changing
+
+<hr>
+
+.animated.fadeIn[
+.pull-left[
+### Multiple seasonality
+### Irregular time intervals
+### Frequent observations
+]
+.pull-right[
+### Many variables and series
+### Missing values
+### Additional noise
+]
+
+<hr>
+
+]
+
+
+---
+class: center
+
+## Time-series data is changing
+
+<hr>
+
+.pull-left[
+### Multiple seasonality
+### Irregular time intervals
+### Frequent observations
+]
+.pull-right[
+### Many variables and series
+### Missing values
+### Additional noise
+]
+
+<hr>
+
+.animated.fadeIn[
+## New tools are needed
+.sticker[![tsibble](resources/tsibble.svg)]
+.sticker[![fable](resources/fable.svg)]
+.sticker[![fasster](resources/fasster.png)]
+]
+
+???
+
+Outline talk structure, a bit on tsibble, mostly about fable, and a bit on fasster
+
+---
+
+class: inverse, top
+
+.sticker-float[![tsibble](resources/tsibble.svg)]
+
+.title[tsibble]
+
+* A modern temporal data structure
+* Provides tools for time-related analysis
+* Integrates seamlessly with the tidyverse
+
+<br>
+
+More information:
+
+* `r fa("github", fill = "white")` [tidyverts/tsibble](https://github.com/tidyverts/tsibble)
+* `r fa("globe", fill = "white")` [tsibble site](https://pkg.earo.me/tsibble/)
+* `r fa("desktop", fill = "white")` [NY Meetup](http://slides.earo.me/bigapple/) & [useR!2018](http://slides.earo.me/useR18/)
+
+???
+
+tsibble is the base for fable, providing a modern data structure for time series.
+Note that a whole talk can be (and has been) made just about tsibble!
+Check the links for more details
+
+---
+
+## A simple example
+
+```{r, echo=TRUE}
+tsibbledata::ausretail
+```
+
+.footnote[Source: Australian Bureau of Statistics. Catalogue No. 8501.0]
+
+???
+
+Features:
+
+* Monthly observations
+* One response variable
+* >64,000 rows
+* Turnover in $M AUD
+* 152 individual series (by State and Industry)
+
+---
+
+## Victorian cafe and restaurant turnover
+
+```{r, echo=TRUE}
+vic_cafe <- tsibbledata::ausretail %>%
+  filter(State == "Victoria", Industry == "Cafes, restaurants and takeaway food services")
+```
+```{r cafe-plot}
+vic_cafe %>%
+  autoplot(Turnover) +
+  ggtitle("Victorian cafe, restaurant and takeaway turnover") +
+  ylab("Turnover ($Million AUD)")
+```
+
+???
+
+Focus on Victorian cafes and restaurants (why? vic loves coffee + food)
+Detail patterns in data (trend, multiplicative seasonality, noise)
+---
+
+## Half-hourly electricity demand data
+
+```{r elecdemand, echo = TRUE}
+tsibbledata::elecdemand
+```
+
+.footnote[Source: Australian Energy Market Operator, and the Australian Bureau of Meteorology]
+
+???
+
+* Data contains only one series (no keys), with 3 variables
+* > 17500 rows
+* Data is for 2014, with half-hourly data
+* We want to forecast Demand.
+
+---
+
+### Electricity demand (Monthly)
+```{r elecMonthly}
+mp4_vid("resources/anim1.mp4")
+```
+
+???
+
+cafe dataset was monthly - if elec demand was monthly it'd look like this.
+Annual seasonal pattern is evident - winter and summer has high demand
+
+---
+
+### Electricity demand (Daily)
+```{r elecDaily}
+mp4_vid("resources/anim2.mp4")
+```
+
+???
+
+data isn't monthly, if instead it were daily we see more patterns
+annual pattern remains, but now there is a working day / not working day pattern
+also, we start to see noise
+
+---
+
+### Electricity demand (Half-hourly)
+```{r elecPlot}
+mp4_vid("resources/anim3.mp4")
+```
+
+???
+
+data is actually half-hourly, when plotting this there is too much to see!
+---
+
+### Electricity demand (Half-hourly)
+```{r elecPlotZoom}
+mp4_vid("resources/anim4.mp4")
+```
+
+???
+
+zooming in, we see half-hourly detail.
+reveals a third seasonal pattern that changes within days
+people demand more electricity when awake, and with peaks in morning and afternoon
+weekend pattern is similar, with a less extreme peak in the morning (relaxed waking hours)
+
+---
+
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[fable]
+
+* A tidy reimplementation of `forecast`
+* Encourages flexible and transparent model design
+* Many more features (the content of this talk!)
+
+<br>
+
+More information:
+
+* `r fa("github", fill = "white")` [tidyverts/fable](https://github.com/tidyverts/fable)
+* `r fa("desktop", fill = "white")` [TFEAM](#) & [useR!2018](https://github.com/robjhyndman/fable-talk-2018/raw/master/fable_useR2018.pdf)
+
+???
+
+explain fable name
+introduce fable as the tool for tidy forecasting
+keep it brief - as it is the content of the talk! :)
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Model]
+
+## Model specification and estimation
+
+`ETS(tsibble, formula, ...)`
+
+`ARIMA(tsibble, formula, ...)`
+
+`TSLM(tsibble, formula, ...)`
+
+and many more...
+
+???
+
+Before forecasting - we need a model
+at minimum, a model requires a tsibble and a model formula
+in this talk, we'll be modelling with ETS, ARIMA, and TSLM
+
+---
+
+## Model specification - with formulas
+
+Using a formula is a concise method of model specification, and is used in most modelling functions in R. Use of a formula is rare in time series modelling, leading to complicated documentation and verbose interfaces.
+
+```{r, echo = TRUE, eval = FALSE}
+transformation(y) ~ trend() + season(period = "day") + x
+```
+
+???
+
+formulas are common in regression models, but not in time series
+formulas are concise and human readable
+
+--
+
+.pull-left[
+
+### LHS: Response
+* Defines the data's response variable
+* Specification of transformations
+  (with automatic back-transformation)
+]
+
+???
+
+also mention bias adjustments
+
+--
+
+.pull-right[
+
+### RHS: Specials
+* Model specific special functions
+* Exogenous regressors
+]
+
+???
+
+discuss with reference to the example formula above
+
+---
+
+## A basic model
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r ets-fit, echo = TRUE}
+fbl_cafe_fit <- vic_cafe %>%
+  fable::ETS(Turnover ~ season("M"))
+```
+```{r ets-fit-print, dependson='ets-fit'}
+fbl_cafe_fit
+```
+
+
+]
+]
+
+???
+
+response is Turnover
+recap why we're using multiplicative seasonality here
+specials not specified (error(), trend()) are automatically chosen to be "M" and "Ad"
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r ets-fc-fit, echo = TRUE}
+fc_fit <- ts(vic_cafe$Turnover, start = c(1982, 4), frequency = 12) %>%
+  forecast::ets("ZZM")
+```
+```{r ets-fc-fit-print, output.lines = 1:10, dependson='etc-fc-fit'}
+fc_fit
+```
+
+]
+]
+
+???
+
+here's the same model in forecast would be produced
+notice the unnatural interface for creating a `ts`!
+
+This is frustrating when your data already contains a time column and is prone to errors!
+What is your data had missing values? gaps? ahh!
+
+---
+
+## Modelling with transformations
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r ets-fit-log, echo = TRUE}
+vic_cafe %>%
+  fable::ETS(log(Turnover) ~ season("A"))
+```
+
+]
+]
+
+???
+
+transformations in fable are natural
+like forecast, they will be automatically back transformed
+note that we now want additive seasonality as logs of multiplicative components gives additive components
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r ets-fc-fit-log, echo = TRUE, output.lines = 1:10}
+ts(vic_cafe$Turnover, start = c(1982, 4), frequency = 12) %>%
+  forecast::ets("ZZA", lambda = 0)
+```
+]
+]
+
+???
+
+forecast only supports BoxCox transformations, and you need to know that lambda=0 is a log
+
+fable also supports combinations transformations, such as log(Turnover + 1) for data with low counts and zeroes!
+
+---
+
+## Using exogenous information
+
+```{r elecdemand-xreg, fig.height=5}
+tsibbledata::elecdemand %>%
+  gather("Series", "Value", Demand, Temperature) %>%
+  mutate(Series = recode(Series, "Demand" = "Demand (GW)", "Temperature" = "Temperature (C)")) %>%
+  ggplot(aes(x=index, y=Value, group=Series)) +
+  geom_line() +
+  facet_grid(Series ~ ., scales = "free_y") +
+  xlab("Date") +
+  ylab(NULL) +
+  ggtitle("Electricity demanded and temperature") +
+  geom_smooth()
+```
+
+???
+
+fable makes xreg easy
+elecdemand is strongly driven by temperature
+
+---
+
+## Modelling with exogenous regressors
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r arima-fit, echo = TRUE}
+tsbl_elec <- tsibbledata::elecdemand %>% filter(index < ymd("2014-03-01"))
+fbl_elec_fit <- tsbl_elec %>%
+  fable::ARIMA(Demand ~ WorkDay + Temperature + I(Temperature^2) +
+               pdq(1,0,1) + PDQ(1,1,1, period = "day"))
+```
+```{r arima-fit-print, dependson='arima-fit'}
+fbl_elec_fit
+```
+
+]
+]
+
+???
+
+need to use ARIMA instead of ETS here, as ETS does not support xreg
+xreg can be added to model formula directly
+brief note about pdq being non-seasonal and PDQ being seasonal
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r arima-fc-fit, echo = TRUE}
+ts_elec <- ts(head(fpp2::elecdemand, 2832), frequency = 48)
+fc_elec_fit <- ts_elec[,"Demand"] %>%
+  forecast::Arima(order = c(1,0,1), seasonal = c(1,1,1),
+                  xreg = cbind(ts_elec[,c("WorkDay", "Temperature")],
+                               ts_elec[,"Temperature"]^2))
+```
+```{r arima-fc-fit-print, dependson='arima-fc-fit'}
+fc_elec_fit
+```
+]
+]
+
+???
+
+xreg with forecast is not pretty!
+manipulating the time series object can be hard (no date comparisons here!) and xregs must be specified as a numerical matrix
+
+BUT!
+The forecast output is more informative, we see some coefficients and other interesting things
+In fable, we only see the selected model
+
+---
+class: inverse
+
+.sticker-float[![broom](resources/broom.png)]
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Extract]
+
+## Extract model information using tidy functions
+
+`augment(mable, ...)`
+
+`tidy(mable, ...)`
+
+`glance(mable, ...)`
+
+`components(mable, ...)`
+
+???
+
+to access this extra model information we use tidy verbs
+fable introduces the components verb which extracts model components (such as states from ETS)
+
+---
+
+# Augment tsibble with model fits (broom::augment)
+
+```{r ets-augment, echo = TRUE, dependson='ets-fit'}
+augment(fbl_cafe_fit)
+```
+
+???
+
+adds fitted model information to the model data
+
+---
+
+# Tidy model parameters (broom::tidy)
+
+```{r ets-tidy, echo = TRUE, dependson='ets-fit'}
+tidy(fbl_cafe_fit)
+```
+
+???
+
+accesses model coefficients in a tidy format
+
+---
+
+# Glance a one-row model summary (broom::glance)
+```{r ets-glance, echo = TRUE, dependson='ets-fit'}
+glance(fbl_cafe_fit)
+```
+
+???
+
+reveals useful model diagnostics such as AIC, sigma, etc.
+
+---
+
+# Extract model components (fable::components)
+```{r ets-components, echo = TRUE, dependson='ets-fit'}
+components(fbl_cafe_fit)
+```
+
+???
+
+these components are particularly interesting to plot
+
+---
+
+# Extract model components (fable::components)
+```{r ets-components-plot, echo = TRUE, dependson='ets-fit'}
+components(fbl_cafe_fit) %>%
+  gather(component, value, level, slope, season) %>%
+  ggplot(aes(x = Month, y = value)) +
+  geom_line() +
+  facet_grid(vars(component), scales = "free_y")
+```
+
+???
+
+shows upward trend and stable/constant seasonal pattern
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Forecast]
+
+## Forecast future values
+
+`forecast(mable, new_data, h, ...)`
+
+???
+
+Now that we've fitted our model, how do we get our forecasts?
+Can use either new_data or h, h is easier, new_data is more precise and supports xreg
+
+---
+
+## Producing forecasts
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r ets-fc-log, echo = TRUE, dependson='ets-fit'}
+fbl_cafe_fc <- fbl_cafe_fit %>% forecast(h=24)
+```
+```{r ets-fc-log-print, output.lines = 1:8, dependson='ets-fc-log'}
+fbl_cafe_fc
+```
+]
+]
+
+???
+
+quickly here!
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r ets-fc-fc-log, echo = TRUE, dependson='ets-fc'}
+fc_fc <- fc_fit %>% forecast(h=24)
+```
+```{r ets-fc-fc-log-print, output.lines = 1:8, dependson='ets-fc-fc-log'}
+fc_fc
+```
+]
+]
+
+???
+
+same interface.
+you'll find once you have your model fitted, the interface is consistent for all models
+
+Note the difference between intervals and distribution.
+Storing distribution allows us to compute any interval without re-computing forecasts
+
+---
+
+## Producing forecasts
+
+```{r ets-fc-log-plot, echo = TRUE}
+fbl_cafe_fc %>% autoplot(vic_cafe)
+```
+
+???
+
+Can't show a table of forecasts without looking at them too!
+Forecasts look reasonable.
+
+---
+
+## Producing forecasts with new data
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r arima-fc, echo = TRUE, dependson='arima-fit'}
+tsbl_elec_new <- tsibbledata::elecdemand %>%
+  filter(index >= ymd("2014-03-01"), index < ymd("2014-03-14"))
+fbl_elec_fc <- fbl_elec_fit %>%
+  forecast(tsbl_elec_new)
+```
+```{r arima-fc-print, output.lines = 1:6, dependson='arima-fc'}
+fbl_elec_fc
+```
+]
+]
+
+???
+
+Forecasting with new data is easy in fable, just provide a tsibble that contains the necessary xregs
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r arima-fc-fc, echo = TRUE, dependson='arima-fc-fit'}
+ts_elec_new <- ts(fpp2::elecdemand[2833:3456,], start = 60, frequency = 48)
+fc_elec_fc <- fc_elec_fit %>%
+  forecast:::forecast.Arima(h=24, xreg = cbind(
+    ts_elec_new[,c("WorkDay", "Temperature")], ts_elec_new[,"Temperature"]^2))
+```
+```{r arima-fc-fc-print, output.lines = 1:8, dependson='arima-fc-fc'}
+fc_elec_fc
+```
+]
+]
+
+???
+
+this is a bit difficult with forecast, as you need to construct the xreg matrix yourself precisely!
+Also note the time output in forecast vs fable! So many decimals!
+
+---
+
+## Producing forecasts with new data
+
+```{r arima-fc-plot, echo = TRUE, dependson='arima-fc'}
+fbl_elec_fc %>% autoplot(tsbl_elec)
+```
+
+???
+
+again, need to show the plot!
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Accuracy]
+
+## Accuracy evaluation to compare models
+
+`accuracy(mable, measures, ...)`
+
+`accuracy(fable, new_data, measures, ...)`
+
+???
+
+accuracy can be computed using on a model (in sample) or forecast (out of sample)
+When evaluating forecasts, you must provide new data
+
+fable adds the flexibility to specify a list of accuracy measures!
+Meaning you can remove measures you don't want, add the ones you do, and even specify your own accuracy measure functions
+
+---
+
+## Evaluating model accuracy
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r ets-accuracy-log, echo = TRUE, dependson='ets-fit'}
+fbl_cafe_fit %>% accuracy()
+```
+]
+]
+
+???
+quickly
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r ets-fc-accuracy-log, echo = TRUE, dependson='ets-fc-fit'}
+fc_fit %>% forecast::accuracy()
+```
+]
+]
+
+???
+identical interface
+fable keeps contextual information from the keys
+
+---
+
+## Evaluating forecast accuracy
+
+.flex-row[
+.sticker-left[![fable](resources/fable.svg)]
+.flex-col[
+```{r arima-fc-accuracy, echo = TRUE, dependson='arima-fc'}
+fbl_elec_fc %>% accuracy(tsbl_elec_new)
+```
+]
+]
+
+--
+
+<hr>
+
+.flex-row[
+.sticker-left[![forecast](resources/forecast.svg)]
+.flex-col[
+```{r arima-fc-fc-accuracy, echo = TRUE}
+fc_elec_fc %>% forecast::accuracy(ts_elec_new[,"Demand"])
+```
+]
+]
+
+???
+
+interface is similar, although forecast requires you to specify a univariate time series to compare against
+forecast provides both training and test accuracy here, despite only providing forecasts (can be confusing)
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+# Forecasting with tables
+
+```{r recap-simple-fit, echo = TRUE}
+fbl_cafe_fit
+```
+
+???
+
+reiterate the package name - fable is for forecasting with tables
+there's a reason why this output is a bit suspicious, a table containing one model?
+
+--
+
+```{r recap-ausretail, echo = TRUE}
+tsibbledata::ausretail
+```
+
+???
+
+but our dataset is a time series containing 152 series!
+if only we could forecast them all?
+
+---
+
+# Estimate
+
+```{r batch-ets, echo = TRUE}
+retail_ets <- tsibbledata::ausretail %>%
+  ETS(Turnover)
+```
+```{r batch-ets-print, dependson='batch-ets'}
+retail_ets
+```
+
+???
+
+that's exactly what we can do!
+fable naturally supports batch forecasting for each series
+we now have 152 models, using the same code as before
+
+here we haven't specified any model specials, so everything is automatically selected
+the first model is slightly different from the rest
+
+---
+
+# Extract (broom::augment)
+
+```{r batch-augment, echo = TRUE, dependson='batch-ets'}
+augment(retail_ets)
+```
+
+???
+
+quickly through extract functions
+
+We can extract model fits and residuals with augments
+
+---
+
+# Extract (broom::tidy)
+
+```{r batch-tidy, echo = TRUE, dependson='batch-ets'}
+tidy(retail_ets)
+```
+
+???
+
+Look at the fitted coefficients
+
+---
+
+# Extract (broom::glance)
+```{r batch-glance, echo = TRUE, dependson='batch-ets'}
+glance(retail_ets)
+```
+
+???
+
+See the model summary statistics
+
+---
+
+# Extract (fable::components)
+```{r batch-components, echo = TRUE, dependson='batch-ets'}
+components(retail_ets)
+```
+
+???
+
+and view the components
+this is particularly interesting to visualise
+
+---
+
+# Extract (fable::components)
+
+```{r batch-components-plot, echo = TRUE, dependson='batch-ets'}
+components(retail_ets) %>%
+  filter(Industry == "Cafes, restaurants and takeaway food services") %>%
+  ggplot(aes(x = Month, y = level, colour = State)) +
+  geom_line()
+```
+
+???
+
+here is the level state from all of the AUS for cafe/restaurant turnover
+We can see without seasonality that NSW has highest turnover, followed by VIC.
+
+---
+
+# Forecast
+
+```{r batch-fc, echo = TRUE, dependson='batch-ets'}
+retail_fc <- retail_ets %>%
+  forecast(h=24)
+```
+```{r batch-fc-print, dependson='batch-fc'}
+retail_fc
+```
+
+???
+to forecast the models is just as easy!
+here we are forecasting 24 steps ahead from the last observation of each series
+
+---
+
+```{r batch-fc-plot, fig.height=7, dependson='batch-fc'}
+tsibbledata::ausretail %>%
+  filter(year(Month) >= 2000) %>%
+  ggplot(aes(x=Month, y=Turnover, colour = State)) +
+  geom_line() +
+  facet_wrap(~ Industry, scales = "free_y") +
+  geom_forecast(aes(ymin = lower, ymax = upper, level = level),
+                fortify(retail_fc) %>% filter(year(Month) >= 2000), stat = "identity") +
+  ylab("Turnover ($Million AUD)")
+```
+
+???
+incase you don't believe it because the code is so simple... here's the proof
+All 152 forecasts plotted with 80% and 95% intervals
+
+Very hard to see/visualise this many series, so let's focus on the cafe industry
+
+---
+
+```{r batch-fc-cafe-plot, fig.height=7, dependson='batch-fc'}
+tsibbledata::ausretail %>%
+  filter(Industry == "Cafes, restaurants and takeaway food services") %>%
+  ggplot(aes(x=Month, y=Turnover, colour = State)) +
+  geom_line() +
+  facet_wrap(~ Industry, scales = "free_y") +
+  geom_forecast(aes(ymin = lower, ymax = upper, level = level),
+                fortify(retail_fc) %>% filter(Industry == "Cafes, restaurants and takeaway food services"), stat = "identity") +
+  ylab("Turnover ($Million AUD)")
+```
+
+???
+
+Good separation of series, the forecasts for each series appears reasonable
+
+---
+
+# Evaluate
+
+```{r batch-accuracy, echo = TRUE, dependson='batch-ets'}
+retail_ets %>% accuracy()
+```
+
+???
+
+accuracy evaluation is just as easy
+scale independent measures such as MAPE and MASE are more meaningful here for comparison (as each series is on different scales)
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Extending fable]
+
+???
+
+so that's the core functionality of fable so far, we're working steadily to introduce new things.
+
+fable is designed to be a modelling ecosystem rather than just one package.
+
+--
+
+## fable is extensible by design
+
+Extension packages can:
+
+* Define new transformations
+* Provide new accuracy measures
+* Introduce new models
+
+Which will then be usable with all other transformations, measures and models!
+
+???
+
+read slide
+
+---
+class: inverse, top
+
+.sticker-float[![fasster](resources/fasster.png)]
+
+.title[fasster]
+
+* A model for switching temporal patterns
+* Supports exogenous regressors and handles missing values
+* Flexible model specification
+
+<br>
+
+More information:
+
+* `r fa("github", fill = "white")` [tidyverts/fasster](https://github.com/tidyverts/fasster)
+* `r fa("desktop", fill = "white")` [useR!2018](https://mitchelloharawild.com/user2018/)
+
+???
+
+The first extension package for fable is fasster.
+fasster is a model extension, which works best on data with switching patterns
+it supports xreg and missing values, and has flexible model specification thanks to fable
+
+this will be a very brief introduction - more details are available on GitHub and in the useR talk
+
+---
+
+## Switching seasonality
+
+```{r fasster-noswitching, fig.height = 5.3}
+tsibbledata::elecdemand %>%
+  filter(month(index) == 6) %>%
+  ggplot(aes(x=index, y = Demand)) +
+  geom_line() +
+  xlab("Time") +
+  ylab("Electricity Demanded (GW)")
+```
+
+???
+
+here is the zoomed in electricity demand data
+
+---
+
+## Switching seasonality
+
+```{r fasster-switching, fig.height = 6}
+tsibbledata::elecdemand %>%
+  filter(month(index) == 6) %>%
+  mutate(
+    `Working Day` = ifelse(WorkDay == 1, Demand, NA),
+    `Non-working Day` = ifelse(WorkDay == 0, Demand, NA)
+  ) %>%
+  gather("Day Type", "Demand", `Working Day`, `Non-working Day`) %>%
+  ggplot(aes(x=index, y = Demand, colour = `Day Type`)) +
+  geom_line() +
+  xlab("Time") +
+  ylab("Electricity Demanded (GW)") +
+  scale_colour_brewer(palette = "Dark2")
+```
+
+???
+
+remember, we saw a separate daily pattern for working days and non working days
+our arima model didn't perform very well because it didn't capture this pattern
+
+this pattern is common in most sub-daily time series, which are becoming more common!
+
+---
+
+# Forecasting with fasster
+
+```{r, fasster-elecfit, echo = TRUE, dependson='arima-fit'}
+fasster_fit <- tsbl_elec %>%
+  fasster(log(Demand) ~ WorkDay %S% (trig(48, 16) + poly(1)) + Temperature + I(Temperature^2))
+```
+
+```{r fasster-elecfit-print}
+fasster_fit
+```
+
+???
+
+fasster uses the same model interface as fable
+I've chosen to use a log transformation, which will be automatically back transformed by fable
+
+My formula specification includes trig seasonality for the daily pattern, and a level, which switches for working and non-working days.
+I've also included Temperature and Temperature^2 as xregs
+
+--
+
+```{r fasster-elecfc, echo = TRUE, dependson='fasster-elecfit'}
+fasster_fc <- fasster_fit %>%
+  forecast(tsbl_elec_new)
+```
+
+```{r fasster-elecfc-print, dependson='fasster-elecfc'}
+fasster_fc
+```
+
+???
+Once I've fitted the model, the function to get forecasts is identical to the ARIMA example.
+We get our fable as a result (note that the distribution is transformed!)
+
+---
+
+# Forecasting with fasster
+```{r fasster-elecfc-plot, echo = TRUE, dependson=c('fasster-elecfc','arima-fc')}
+fasster_fc %>%
+  autoplot(tsbl_elec)
+```
+
+???
+
+the forecasts look much better than ARIMA, as the model is better specified to capture the data patterns.
+
+---
+class: inverse
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[What's next?]
+
+# A peek into the future of fable!
+
+???
+
+Lot's of new features are planned.
+All of the code/examples presented here is implemented and usable.
+
+---
+
+## `simulate()` future paths
+
+```{r vic-cafe-sim, echo = TRUE, dependson='ets-fit'}
+set.seed(20181108)
+vic_cafe_sim <- fbl_cafe_fit %>%
+  simulate(h = 24, times = 5)
+```
+```{r vic-cafe-sim-print, dependson='vic-cafe-sim'}
+vic_cafe_sim
+```
+
+???
+
+simulating data is a nice way to present the uncertainty in forecasts
+here we're using the vic_cafe ETS model and simulating 24 steps ahead 5 times
+
+---
+
+## `simulate()` future paths
+
+```{r vic-cafe-sim-plot, echo = TRUE, dependson='vic-cafe-sim'}
+vic_cafe %>%
+  filter(year(Month) >= 2010) %>%
+  autoplot(Turnover) +
+  geom_line(aes(y = .sim, group = .rep), alpha = 0.3, data = vic_cafe_sim)
+```
+
+???
+
+from the simulation you can see substantial uncertainty.
+the seasonal pattern is still evident.
+
+---
+
+## `interpolate()` missing values
+
+.float-left[
+```{r olympic-running, echo = TRUE}
+tsibbledata::olympic_running
+```
+]
+
+.plot-right-absolute[
+```{r olympic-running-miss, fig.width = 9, fig.height = 6}
+library(tsibbledata)
+olympic_running %>%
+  ggplot(aes(x=Year, y = Time, colour = Sex)) +
+  geom_line() +
+  geom_point(size = 1) +
+  facet_wrap(~ Length, scales = "free_y", ncol = 2) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Dark2") +
+  theme(legend.position = "bottom", legend.title = element_blank()) +
+  ylab("Running time (seconds)")
+```
+]
+
+.footnote[Source: The International Olympic Committee ([www.olympic.org](www.olympic.org))]
+
+???
+
+Missing values are especially relevant for modern time series datasets
+if you observe things more frequently, there is a higher chance something will go wrong
+
+This data is the fastest running time from the olympics (men and women, 100m-10,000m)
+The data has missing values in 1916, 1940, and 1944 due to the world wars.
+
+---
+
+## `interpolate()` missing values
+
+.float-left[
+```{r olympic-interpolated, echo = TRUE}
+olympic_complete <- olympic_running %>%
+  TSLM(Time ~ trend()) %>%
+  interpolate(olympic_running)
+```
+```{r olympic-interpolated-print, echo = FALSE, dependson='olympic-interpolated'}
+olympic_complete
+```
+]
+
+.plot-right-absolute[
+```{r olympic-running-completed, fig.width = 9, fig.height = 6, dependson='olympic-interpolated'}
+olympic_running %>%
+  ggplot(aes(x=Year, y = Time, colour = Sex)) +
+  geom_line(aes(linetype = "Interpolated"), data = olympic_complete) +
+  geom_line(aes(linetype = "Actual")) +
+  geom_point(size = 1) +
+  facet_wrap(~ Length, scales = "free_y", ncol = 2) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Dark2") +
+  theme(legend.position = "bottom", legend.title = element_blank()) +
+  ylab("Running time (seconds)")
+```
+]
+
+???
+
+model based interpolation in fable is easy.
+here we've fitted a LM with linear trend, and used it to interpolate the data.
+
+---
+
+# `refit()` and `stream()` new data
+
+`refit()` allows a model to be applied to a new dataset.
+
+`stream()` allows a model to be extended using new data.
+
+???
+
+similar functions in that they modify a model to suit new data.
+
+--
+
+Models parameters can be re-estimated (could be time consuming) or not.
+
+---
+
+# `stream()` new data
+
+```{r fasster-fc-recall, echo = TRUE, eval = FALSE}
+fasster_fc
+```
+
+```{r fasster-fc-recall-plot}
+tsbl_elec_newer <- tsibbledata::elecdemand %>%
+  filter(index >= ymd("2014-03-14"), index < ymd("2014-04-01"))
+fasster_fc %>% autoplot(tsbl_elec) +
+  xlab(NULL) +
+  ylab("Electricity Demanded (GW)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank()) +
+  xlim(c(min(tsbl_elec$index), max(tsbl_elec_newer$index))) +
+  ylim(c(1.95, 9.75))
+```
+
+???
+
+earlier, we fitted a fasster model to electricity demand and got these forecasts
+
+---
+
+# `stream()` new data
+
+```{r stream-newdata-code, echo = TRUE, eval = FALSE}
+tsbl_elec_new
+```
+
+```{r stream-data}
+tsbl_elec %>%
+  ggplot(aes(x = index, y = Demand)) +
+  geom_line(aes(colour = "Model data")) +
+  geom_line(aes(colour = "Streaming data"), data = tsbl_elec_new) +
+  xlab(NULL) +
+  ylab("Electricity Demanded (GW)") +
+  scale_colour_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank()) +
+  xlim(c(min(tsbl_elec$index), max(tsbl_elec_newer$index))) +
+  ylim(c(1.95, 9.75))
+```
+
+???
+
+well, two weeks later we've gotten more data!
+normally to include this new information we would need to re-estimate the full model again (could be time consuming!)
+
+---
+
+# `stream()` new data
+
+```{r fasster-stream, echo = TRUE}
+fasster_stream <- fasster_fit %>% stream(tsbl_elec_new)
+```
+
+```{r fasster-stream-fc-plot}
+fasster_stream %>%
+  forecast(tsbl_elec_newer) %>%
+  autoplot(rbind(tsbl_elec, tsbl_elec_new)) +
+  xlab(NULL) +
+  ylab("Electricity Demanded (GW)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank()) +
+  ylim(c(1.95, 9.75))
+```
+
+???
+
+using stream(), we update the fitted model to include the new data, without needing to re-estimate the full model.
+
+---
+
+# Decomposition forecasting
+
+```{r stl-decomposition, echo = TRUE}
+library(tsibblestats)
+cafe_dcmp <- vic_cafe %>%
+  STL(log(Turnover))
+```
+
+```{r stl-decomposition-print}
+cafe_dcmp
+```
+
+???
+
+decompositions are also a useful forecasting technique
+in forecast, stl forecasting is possible
+
+in fable, there are plans to be able to forecast the components from any decomposition
+here we have decomposed the cafe data using STL
+the dable knows how to recombine components to get the original forecast
+
+---
+
+# Decomposition forecasting
+
+```{r stl-decomposition-plot, fig.height=5.5}
+cafe_dcmp %>%
+  gather(component, value, trend, season_year, remainder) %>%
+  ggplot(aes(x = Month, y = value)) +
+  geom_line() +
+  facet_grid(fct_rev(component) ~ ., scales = "free_y") +
+  ggtitle("Victorian cafe, restaurant and takeaway turnover") +
+  ylab("Turnover ($Million AUD)")
+```
+
+???
+
+here's a plot of those components.
+
+Providing new decomposition functions is another way that fable can be extended
+
+---
+
+# Interval and distribution accuracy
+
+Winker's score for interval accuracy:
+$$W(\ell_t,u_t,y_t) = \begin{cases} (u_t-\ell_t) & \ell_t < y_t < u_t \\
+    (u_t-\ell_t) + \frac{2}{\alpha}(\ell_t-y_t) & y_t < \ell_t \\
+    (u_t-\ell_t) + \frac{2}{\alpha}(y_t-u_t) & y_t > u_t.\end{cases}$$
+
+Percentile scoring for distribution accuracy:
+$$L(q_{i,t}, y_t) = \begin{cases} (1 - i/100) (q_{i,t} - y_t) & y_t< q_{i,t}\\
+	  (i/100) (y_t - q_{i,t}) & y_t\ge q_{i,t}.\end{cases}$$
+
+???
+
+Evaluating the accuracy of prediction intervals is also possible in fable.
+Currently two measures are supported, winker's for interval accuracy and percentile for distributions
+
+---
+
+# Interval and distribution accuracy
+
+```{r accuracy-new, echo = TRUE, dependson='arima-fc'}
+fbl_elec_fc %>%
+  accuracy(
+    new_data = tsbl_elec_new,
+    measures = list(winkler = winkler_score, percentile = percentile_score)
+  )
+```
+
+???
+
+You can use them by adding them to the accuracy measures.
+
+---
+
+# More modelling methods
+
+- BATS/TBATS
+- DSHW
+- NNAR
+- THETA
+- CROSTON
+- Structural models (StructTS)
+
+--
+
+(any many more...)
+
+???
+
+There are many more modelling functions available in forecast left to add into fable.
+fable will keep growing and getting better
+
+---
+
+class: inverse, top
+
+.sticker-float[![fable](resources/fable.svg)]
+
+.title[Thanks! `r fa("comments", fill = "white")`]
+
+<br>
+
+.larger[
+`r fa("github", fill = "white")` Learn more on GitHub: [tidyverts/fable](https://github.com/tidyverts/fable)
+
+`r fa("chart-line", fill = "white")` Keep updated: [tidyverts.org](http://www.tidyverts.org)
+
+`r fa("desktop", fill = "white")` Review slides: [mitchelloharawild.com/fable-tfeam](https://mitchelloharawild.com/fable-tfeam)
+
+<br>
+
+.footnote[This work is licensed as `r fa("creative-commons", fill="white")` BY-NC 4.0.]
+]
