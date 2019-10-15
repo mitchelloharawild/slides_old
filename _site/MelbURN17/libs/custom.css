@@ -1,0 +1,82 @@
+.huge h1 {
+	font-size: 130px;
+	margin: 5px;
+	color: #6fb2ed;
+}
+
+.big h1 {
+	font-size: 80px;
+}
+
+.big{
+	font-size: 50px;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.lessSpace h1 {
+	margin: 10px;
+}
+
+#models-for-forecasting-multiple-seasonality {
+	font-size: 100px;
+	color: #6fb2ed;
+}
+
+#mitchell-o-hara-wild {
+	font-size: 50px;
+}
+
+.inverse a {
+	color: #8fd69b;
+}
+
+.blue {
+	color: #6fb2ed;
+}
+
+.green {
+	color: #8fd69b;
+}
+
+.sticker-math img{
+	height: 200px;
+
+}
+
+.sticker-math p{
+	font-family: 'Yanone Kaffeesatz';
+	font-weight: normal;
+	font-size: 150px;
+	margin: 0px;
+}
+
+.remark-code {
+	text-shadow: 0 0 0 #fff
+}
+
+.sticker-float img{
+	height: 200px;
+	float: right;
+}
+
+.table{
+	width: 100%;
+	text-align: center;
+}
+
+.table > tbody > tr > td.success {
+	background-color: #dff0d8;
+}
+
+.table > tbody > tr > td.warning {
+	background-color: #fcf8e3;
+}
+
+.table > tbody > tr > td.danger {
+	background-color: #f2dede;
+}
+
+.mjx-chtml{ font-size: 110% !important; }
