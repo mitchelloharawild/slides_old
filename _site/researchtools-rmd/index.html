@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Research Tools - More R Markdown</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Mitchell O’Hara-Wild" />
+    <script src="index_files/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="libs/slides.css" type="text/css" />
+    <link rel="stylesheet" href="libs/animate.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: inverse
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/alfons-morales-YLSwjSy7stw-unsplash.jpg")
+background-size: cover
+
+&lt;style type="text/css"&gt;
+/* custom.css */
+.left-code {
+  color: #777;
+  width: 48%;
+  height: 92%;
+  float: left;
+}
+.right-plot {
+  width: 50%;
+  float: right;
+  padding-left: 1%;
+}
+&lt;/style&gt;
+
+
+
+
+
+.title[Research Tools]
+.sticker-float[![rmarkdown](resources/rmarkdown.svg)]
+.title.cursive[More R Markdown]
+
+.cursive[(Made with R Markdown!)]
+
+.bottom[
+### Mitchell O'Hara-Wild (&lt;svg viewBox="0 0 512 512" style="height:1em;position:relative;display:inline-block;top:.1em;fill:#1da1f2;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"&gt;&lt;/path&gt;&lt;/svg&gt;[@mitchoharawild](https://twitter.com/mitchoharawild))
+]
+
+---
+class: inverse middle center
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/patrick-tomasso-Oaqk7qqNh_c-unsplash.jpg")
+background-size: cover
+
+.title.cursive[R Markdown Recap]
+
+---
+class: middle center
+background-image:  url("resources/rmd_recap.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_structure_1.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_structure_2.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_contents_1.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_contents_2.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_contents_3.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_contents_4.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_inline.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_options.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_run_above.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_run_this.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_source.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_visual.png")
+background-size: auto
+---
+class: middle center
+background-image:  url("resources/rmd_knit.png")
+background-size: auto
+---
+class: inverse middle center
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/richa-sharma-u8m5JYqW0Zg-unsplash.jpg")
+background-size: cover
+
+.title[Ready for...]
+.title.cursive[More R Markdown?]
+
+---
+class: inverse middle center
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/adeolu-eletu-ohh8ROaQSJg-unsplash.jpg")
+background-size: cover
+
+.title.cursive[Output formats]
+
+---
+
+# Output formats
+
+The same R Markdown code can produce output in many styles and formats.
+
+These include:
+
+* HTML
+* PDF
+* Word
+* Powerpoint
+* Markdown
+* Even e-books! 🖥📚
+
+Plus many more output styles are available in R packages.
+
+---
+
+.sticker-float[![xaringan](resources/xaringan.svg)]
+# Output formats (slides)
+
+These slides are made using the `xaringan` R package.
+
+![](resources/rmd_xaringan.png)
+
+---
+
+.sticker-float[![bookdown](resources/bookdown.svg)]
+# Output formats (books)
+
+The bookdown package allows you to write books that can be viewed anywhere (HTML, PDF, ePub &amp; Kindle)!
+
+This format has been used to write many R books such as [Forecasting: Principles and Practice (3rd ed)](https://otexts.com/fpp3/).
+
+It has also been used to arrange research work into a openly accessible thesis: https://thesis.earo.me/
+
+---
+
+# Output formats (research)
+
+For publishing work in common journals, look no further than the `rticles` package.
+
+A simple change to the R Markdown's output format produces output suitable for submitting to many journals.
+
+---
+
+# Output formats (Monash)
+
+Many output formats useful to staff and research students at Monash are contained in the `monash` package.
+
+It's not on CRAN, but you can find it on GitHub here: https://github.com/numbats/monash
+
+You can install it with:
+
+```r
+# install.packages("remotes")
+remotes::install_github("numbats/monash")
+```
+
+Let's see how we can make slides and a thesis with this package's templates.
+
+---
+
+# Output formats (custom)
+
+You can also create your own output formats. Usually this isn't necessary, as there is likely a suitable format already available in a package.
+
+Making your own output format isn't too tricky, but does involve learning more about how the rmarkdown package works behind the scenes.
+
+In the [vitae](https://github.com/mitchelloharawild/vitae) package, I've made several templates for making CVs.
+
+More info: https://bookdown.org/yihui/rmarkdown/new-formats.html
+
+
+---
+class: inverse middle center
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/mike-hindle-OIwLUSQj4b0-unsplash.jpg")
+background-size: cover
+
+.title.cursive[Code, figures, tables &amp; math]
+
+---
+
+# R Markdown: code
+
+Despite the name, R Markdown works with many languages!
+
+
+```r
+names(knitr::knit_engines$get())
+```
+
+```
+##  [1] "awk"       "bash"      "coffee"    "gawk"      "groovy"    "haskell"   "lein"      "mysql"     "node"     
+## [10] "octave"    "perl"      "psql"      "Rscript"   "ruby"      "sas"       "scala"     "sed"       "sh"       
+## [19] "stata"     "zsh"       "asis"      "asy"       "block"     "block2"    "bslib"     "c"         "cat"      
+## [28] "cc"        "comment"   "css"       "ditaa"     "dot"       "embed"     "exec"      "fortran"   "fortran95"
+## [37] "go"        "highlight" "js"        "julia"     "python"    "R"         "Rcpp"      "sass"      "scss"     
+## [46] "sql"       "stan"      "targets"   "tikz"      "verbatim"  "glue"      "glue_sql"  "gluesql"
+```
+
+---
+
+# ~~R~~ Python Markdown: code
+
+For example, you can write Python code directly in code chunks:
+````
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+t = np.arange(0.0, 2.0, 0.01)
+plt.plot(t, 1 + np.sin(2*np.pi*t))
+```
+````
+&lt;img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /&gt;
+
+
+---
+
+# R Markdown: figures
+
+As seen in the Python chunk, when the code produces an image it is auto-magically included in the output.
+
+````
+```{r}
+library(ggplot2)
+ggplot(economics, aes(date, unemploy)) + geom_line()
+```
+````
+![](index_files/figure-html/unnamed-chunk-4-3.png)&lt;!-- --&gt;
+
+---
+
+# R Markdown: figures
+
+You can also include figures from a file, using `knitr::include_graphics()` or directly in markdown with `![image alt text](path/to/image)`
+
+````
+```{r}
+knitr::include_graphics("resources/cat.webp")
+```
+````
+--
+![](resources/cat.webp)&lt;!-- --&gt;
+
+---
+
+# R Markdown: figures
+
+But wait, there's options for these figures!
+
+
+|Option      |Description                                                                                                                                                        |
+|:-----------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|label       |All chunks should be labelled. It's extra important for figures! The chunk label is used to generate the figure's file name, and how you reference it in the text. |
+|fig.caption |All good figures need a good caption! Add it with this chunk option.                                                                                               |
+|fig.align   |Alignment of the figure, such as 'center'.                                                                                                                         |
+|fig.height  |Set the height of the figure (in inches by default).                                                                                                               |
+|fig.width   |Set the width of the figure (in inches by default).                                                                                                                |
+|dpi         |Set the pixel density of the figure (in dots per inch).                                                                                                            |
+|dev         |The plot device for the figure (changes file type).                                                                                                                |
+
+---
+
+# R Markdown: tables
+
+Basic tables can be added to your document using the `knitr::kable()` function.
+
+Simply pass it a dataframe, and it'll produce a table from it.
+
+
+```r
+library(dplyr)
+chickwts %&gt;% 
+  group_by(`Feed` = feed) %&gt;% 
+  summarise(`Median weight` = median(weight)) %&gt;% 
+  arrange(desc(`Median weight`)) %&gt;% 
+  knitr::kable()
+```
+
+
+
+|Feed      | Median weight|
+|:---------|-------------:|
+|casein    |         342.0|
+|sunflower |         328.0|
+|meatmeal  |         263.0|
+|soybean   |         248.0|
+|linseed   |         221.0|
+|horsebean |         151.5|
+
+---
+
+# R Markdown: tables
+
+These `kable()` tables are customised directly with the arguments of the `kable()` function.
+For example, a table caption is set with `kable(caption = 'the caption')`.
+
+The styling options of a `kable()` table is limited, but the `kableExtra` package allows for further control of the table's appearance.
+
+---
+
+# R Markdown: tables
+
+There are many alternative packages that can be used to produce tables.
+
+A noteworthy alternative is the `gt` package, which produces beautiful tables (and possibly complex) tables in both HMTL and PDF.
+
+Check it out here: https://github.com/rstudio/gt
+
+![gt table](resources/gt_workflow_diagram.svg)
+---
+
+# R Markdown: math
+
+Math in R Markdown is typeset using LaTeX's mathematical expressions.
+
+Math can be written inline with `$y^2 = y \times y$`: `\(y^2 = y \times y\)`
+
+Or in a block (new line) with `$​$\mu = \dfrac{1}{N}\sum_N x_i$$`:
+
+`$$\mathbb{E}(X) = \dfrac{1}{N}\sum_N x_i$$`
+
+---
+
+# R Markdown: math
+
+It is also possible to label mathematical equations in a math environment.
+
+This is done using `(\#eq:label)` at the line you'd like to number.
+
+```
+\begin{equation} 
+  f\left(k\right) = \binom{n}{k} p^k\left(1-p\right)^{n-k}
+  (\#eq:binom)
+\end{equation}
+```
+
+This also works for aligned math environments.
+
+---
+
+class: inverse middle center
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/volodymyr-hryshchenko-ZT9gjcJog6U-unsplash.jpg")
+background-size: cover
+
+.title.cursive[Referencing, referencing, referencing.]
+
+---
+
+# Referencing: figures
+
+Often you'll want to direct readers to a particular figure.
+
+A figure reference is made using this text: `\@ref(fig:chunk-label))`
+
+You may run into some issues if your chunk label has spaces or underscores in it, so best avoid those!
+
+
+---
+
+# Referencing: tables
+
+Similar to how a figure is referenced from within the text, a table can be linked to using `\@ref(tab:chunk-label))`.
+
+Good chunk labels are very helpful when it comes to referencing throughout the document.
+
+---
+
+# Referencing: math
+
+If you've set a label in a math environment, you can later refer to that equation using `\@ref(eq:label)`.
+
+---
+
+# Referencing: sections
+
+It is also common to link to specific sections or chapters. Just like with math referencing, to do this we need to provide a label for the section.
+
+In the document's markdown headers, we can add `{#label}` after the header text to give it a label. For example:
+
+```markdown
+## Methods {#method}
+```
+
+Then you can later refer to this methods section using `\@ref(method)`. It is common to use `ch:` prefixes for labelling chapters, and `sec:` prefixes for section labels.
+
+
+---
+
+# Referencing: article citations
+
+R Markdown handles the bibliography formatting for you, however you need to provide it with the bibliography data. 
+
+This is done in the document's YAML front matter by providing a bibliography file in the `bibliography` field. For example:
+
+```yaml
+---
+title: "My important research"
+author: "Mitchell O'Hara-Wild"
+output: html_document
+bibliography: references.bib
+---
+```
+
+---
+
+# Referencing: article citations
+
+You can obtain the bib entries for R package using the `citation()` function.
+
+This is what a bib entries look like:
+
+
+```r
+toBibtex(citation("rmarkdown"))
+```
+
+```
+## @Manual{,
+##   title = {rmarkdown: Dynamic Documents for R},
+##   author = {JJ Allaire and Yihui Xie and Jonathan McPherson and Javier Luraschi and Kevin Ushey and Aron Atkins and Hadley Wickham and Joe Cheng and Winston Chang and Richard Iannone},
+##   year = {2022},
+##   note = {R package version 2.13},
+##   url = {https://github.com/rstudio/rmarkdown},
+## }
+## 
+## @Book{,
+##   title = {R Markdown: The Definitive Guide},
+##   author = {Yihui Xie and J.J. Allaire and Garrett Grolemund},
+##   publisher = {Chapman and Hall/CRC},
+##   address = {Boca Raton, Florida},
+##   year = {2018},
+##   note = {ISBN 9781138359338},
+##   url = {https://bookdown.org/yihui/rmarkdown},
+## }
+## 
+## @Book{,
+##   title = {R Markdown Cookbook},
+##   author = {Yihui Xie and Christophe Dervieux and Emily Riederer},
+##   publisher = {Chapman and Hall/CRC},
+##   address = {Boca Raton, Florida},
+##   year = {2020},
+##   note = {ISBN 9780367563837},
+##   url = {https://bookdown.org/yihui/rmarkdown-cookbook},
+## }
+```
+
+---
+
+# Referencing: article citations
+
+Your preferred reference manager should be able to generate this bib file for you.
+
+I use Zotero for this as it is free, open source, and works fine.
+
+There are many options for reference managers, with Paperpile being a popular paid option.
+
+---
+
+# Referencing: article citations
+
+```bib
+@Manual{rmarkdown,
+  title = {rmarkdown: Dynamic Documents for R},
+  author = {JJ Allaire and Yihui Xie and Jonathan McPherson and Javier Luraschi and Kevin Ushey and Aron Atkins and Hadley Wickham and Joe Cheng and Winston Chang and Richard Iannone},
+  year = {2022},
+  note = {R package version 2.13},
+  url = {https://github.com/rstudio/rmarkdown},
+}
+```
+
+The first field in the bib entry is that article's key, which you'll use to reference it in the text.
+
+An in-text citation can be added with `@key`, for example: 
+&gt; `Development by @rmarkdown has...`.
+
+Citations in parenthesis are added with `[@key]`, for example: 
+&gt; `The R Markdown package [@rmarkdown] has ...`.
+
+
+---
+class: inverse middle
+background-image: linear-gradient(to bottom, rgba(50, 50, 50, .8), rgba(50, 50, 50, .5)), url("resources/john-gibbons-JZyJxeCBtF4-unsplash.jpg")
+background-size: cover
+
+.title.cursive[Where next?]
+
+.title[Version control]
+
+.title.cursive[Time travelling with code]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="./libs/jquery/jquery.min.js"></script>
+<script src="./libs/slides.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"ratio": "16:9",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
